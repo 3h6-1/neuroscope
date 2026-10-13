@@ -1,0 +1,1383 @@
+{
+  "schemaVersion": 1,
+  "title": "Curated brain pharmacology teaching catalog",
+  "retrieved": "2026-10-13",
+  "scope": "Sourced molecular identities and selected pharmacology with explicit model assumptions. No patient-specific PK, clinical effect or combination-safety prediction.",
+  "units": {
+    "kiNM": "nM; see evidenceType for assay Ki versus illustrative K*",
+    "concentration": "nM",
+    "halfLifeH": "hours",
+    "brainPartition": "unbound brain / unbound plasma (Kp,uu)"
+  },
+  "modelAssumptions": [
+    "Target affinities differ by assay, species, radioligand and receptor state. Ki, Kd, EC50 and IC50 are distinct.",
+    "All numeric efficacy coefficients, brainPartition values and brainEquilibrationH values are illustrative.",
+    "Default concentrations are demonstration exposures, not doses or therapeutic targets.",
+    "Metabolism enzyme identities are sourced; any numeric inhibition strength and fractional clearance allocation are model assumptions.",
+    "Serotonergic interactions are qualitative, context-dependent and cannot be translated to a precise safety or symptom score.",
+    "Molecular conformers and structural identity do not validate network-level predictions."
+  ],
+  "compounds": [
+    {
+      "id": "escitalopram",
+      "name": "Escitalopram",
+      "aliases": [
+        "S-citalopram",
+        "Lexapro",
+        "Cipralex",
+        "escitalopram oxalate"
+      ],
+      "cid": 146570,
+      "structureCid": 40466954,
+      "formula": "C20H21FN2O",
+      "molecularWeight": 324.4,
+      "class": "SSRI",
+      "modelType": "acute",
+      "simulationSupported": true,
+      "defaultConcentrationNM": 30,
+      "defaultExposureEvidence": "Illustrative total plasma concentration; not a dose, recommendation, therapeutic target or safety threshold.",
+      "targets": [
+        {
+          "target": "SERT",
+          "kiNM": 1.1,
+          "affinityLabel": "Ki (assay)",
+          "action": "inhibitor",
+          "efficacy": 0,
+          "evidenceType": "assay",
+          "modelAssumption": false,
+          "subtype": "SLC6A4",
+          "evidence": {
+            "type": "assay",
+            "note": "Ki 1.1 nM from radioligand binding at the human serotonin transporter; assay affinity is not a direct clinical occupancy measurement.",
+            "sourceIds": [
+              "escitalopram-assay"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "escitalopram-assay"
+            ]
+          }
+        }
+      ],
+      "pk": {
+        "halfLifeH": 30,
+        "freeFraction": 0.44,
+        "brainPartition": 1,
+        "brainEquilibrationH": 0.25,
+        "evidence": {
+          "halfLifeH": {
+            "type": "representative",
+            "note": "30 h is representative of the labeled 27–32 h terminal half-life.",
+            "sourceIds": [
+              "escitalopram-label"
+            ]
+          },
+          "freeFraction": {
+            "type": "label-derived",
+            "note": "Free fraction 0.44 is 1 minus the label’s approximately 56% plasma protein binding.",
+            "sourceIds": [
+              "escitalopram-label"
+            ]
+          },
+          "brainPartition": {
+            "type": "illustrative",
+            "note": "Kp,uu = 1 is a teaching assumption for unbound brain/free plasma equilibrium; no tissue-specific measurement is claimed.",
+            "sourceIds": []
+          },
+          "brainEquilibrationH": {
+            "type": "illustrative",
+            "note": "15-minute effect-compartment equilibration time is a shared model setting, not a measured blood–brain barrier permeability.",
+            "sourceIds": []
+          }
+        }
+      },
+      "metabolism": {
+        "substrate": [
+          "CYP2C19",
+          "CYP3A4"
+        ],
+        "inhibits": [],
+        "evidence": {
+          "type": "qualitative-sourced",
+          "note": "Major N-demethylation pathways include CYP2C19 and CYP3A4. Minor pathways and weak inhibition are omitted.",
+          "sourceIds": [
+            "escitalopram-label"
+          ]
+        },
+        "fractionalClearanceEvidence": {
+          "type": "illustrative",
+          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "sourceIds": []
+        }
+      },
+      "notes": [
+        "S-enantiomer. The 3D view uses the separately identified N-protonated ion CID 40466954, C20H22FN2O⁺.",
+        "Central-site SERT inhibition is represented; allosteric binding and adaptation are omitted.",
+        "The oxalate formulation is normalized to the active drug moiety; no salt-to-brain co-transport is implied."
+      ],
+      "sources": [
+        {
+          "id": "pubchem-escitalopram",
+          "title": "PubChem molecular identity, CID 146570",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/compound/146570"
+        },
+        {
+          "id": "escitalopram-assay",
+          "title": "Owens et al. (2001), human monoamine transporter radioligand binding",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/11543737/"
+        },
+        {
+          "id": "escitalopram-label",
+          "title": "DailyMed, Lexapro prescribing information",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=13bb8267-1cab-43e5-acae-55a4d957630a"
+        }
+      ],
+      "unavailable3D": false,
+      "structureDimension": 3,
+      "structureNote": "Explicit protonated S-escitalopram ion, distinct from catalog neutral-parent molecular weight.",
+      "pathway": [],
+      "qualitativeExposureSupported": false
+    },
+    {
+      "id": "aripiprazole",
+      "name": "Aripiprazole",
+      "aliases": [
+        "Abilify"
+      ],
+      "cid": 60795,
+      "structureCid": 60795,
+      "formula": "C23H27Cl2N3O2",
+      "molecularWeight": 448.4,
+      "class": "Dopamine/serotonin modulator",
+      "modelType": "acute",
+      "simulationSupported": true,
+      "defaultConcentrationNM": 100,
+      "defaultExposureEvidence": "Illustrative total plasma concentration; not a dose, recommendation, therapeutic target or safety threshold.",
+      "targets": [
+        {
+          "target": "D2",
+          "kiNM": 0.34,
+          "affinityLabel": "Ki (assay)",
+          "action": "partial_agonist",
+          "efficacy": 0.25,
+          "evidenceType": "assay",
+          "modelAssumption": false,
+          "subtype": "DRD2",
+          "evidence": {
+            "type": "assay",
+            "note": "Labeled D2 binding Ki 0.34 nM; efficacy depends on signaling pathway, receptor reserve and endogenous dopamine.",
+            "sourceIds": [
+              "aripiprazole-label"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "aripiprazole-label"
+            ]
+          }
+        },
+        {
+          "target": "HT1A",
+          "kiNM": 1.7,
+          "affinityLabel": "Ki (assay)",
+          "action": "partial_agonist",
+          "efficacy": 0.3,
+          "evidenceType": "assay",
+          "modelAssumption": false,
+          "subtype": "HTR1A",
+          "evidence": {
+            "type": "assay",
+            "note": "Labeled 5-HT1A binding Ki 1.7 nM; partial agonism is qualitative pharmacology.",
+            "sourceIds": [
+              "aripiprazole-label"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "aripiprazole-label"
+            ]
+          }
+        },
+        {
+          "target": "HT2A",
+          "kiNM": 3.4,
+          "affinityLabel": "Ki (assay)",
+          "action": "antagonist",
+          "efficacy": 0,
+          "evidenceType": "assay",
+          "modelAssumption": false,
+          "subtype": "HTR2A",
+          "evidence": {
+            "type": "assay",
+            "note": "Labeled 5-HT2A binding Ki 3.4 nM.",
+            "sourceIds": [
+              "aripiprazole-label"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "aripiprazole-label"
+            ]
+          }
+        }
+      ],
+      "pk": {
+        "halfLifeH": 75,
+        "freeFraction": 0.01,
+        "brainPartition": 1,
+        "brainEquilibrationH": 0.25,
+        "evidence": {
+          "halfLifeH": {
+            "type": "representative",
+            "note": "Labeled mean parent half-life about 75 h; dehydro-aripiprazole and CYP2D6 phenotype are not resolved.",
+            "sourceIds": [
+              "aripiprazole-label"
+            ]
+          },
+          "freeFraction": {
+            "type": "upper-bound approximation",
+            "note": "The label reports greater than 99% binding. Free fraction 0.01 is an illustrative upper-bound approximation, not an exact measurement.",
+            "sourceIds": [
+              "aripiprazole-label"
+            ]
+          },
+          "brainPartition": {
+            "type": "illustrative",
+            "note": "Kp,uu = 1 is a teaching assumption for unbound brain/free plasma equilibrium; no tissue-specific measurement is claimed.",
+            "sourceIds": []
+          },
+          "brainEquilibrationH": {
+            "type": "illustrative",
+            "note": "15-minute effect-compartment equilibration time is a shared model setting, not a measured blood–brain barrier permeability.",
+            "sourceIds": []
+          }
+        }
+      },
+      "metabolism": {
+        "substrate": [
+          "CYP2D6",
+          "CYP3A4"
+        ],
+        "inhibits": [],
+        "evidence": {
+          "type": "qualitative-sourced",
+          "note": "CYP2D6 and CYP3A4 contribute to metabolism. Inhibitors can increase parent exposure; active metabolite kinetics are omitted.",
+          "sourceIds": [
+            "aripiprazole-label"
+          ]
+        },
+        "fractionalClearanceEvidence": {
+          "type": "illustrative",
+          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "sourceIds": []
+        }
+      },
+      "notes": [
+        "Partial agonism can increase or decrease a signaling proxy depending on endogenous dopamine; it is not equivalent to simple blockade.",
+        "Other binding targets and the active metabolite dehydro-aripiprazole are omitted.",
+        "Protein binding, CYP genotype and clearance pathways vary among people."
+      ],
+      "sources": [
+        {
+          "id": "pubchem-aripiprazole",
+          "title": "PubChem molecular identity, CID 60795",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/compound/60795"
+        },
+        {
+          "id": "aripiprazole-label",
+          "title": "DailyMed, aripiprazole prescribing information",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=569f1c32-fb6f-c34f-0894-4b1e7b744a8a"
+        }
+      ],
+      "unavailable3D": false,
+      "structureDimension": 3,
+      "structureNote": "Neutral parent reference conformer; not a claim about dominant protonation state in brain fluid.",
+      "pathway": [],
+      "qualitativeExposureSupported": false
+    },
+    {
+      "id": "bupropion",
+      "name": "Bupropion",
+      "aliases": [
+        "bupropion HCl",
+        "bupropion hydrochloride",
+        "Wellbutrin",
+        "Zyban"
+      ],
+      "cid": 444,
+      "structureCid": 444,
+      "formula": "C13H18ClNO",
+      "molecularWeight": 239.74,
+      "class": "Norepinephrine/dopamine reuptake inhibitor",
+      "modelType": "acute",
+      "simulationSupported": true,
+      "defaultConcentrationNM": 1000,
+      "defaultExposureEvidence": "Illustrative total plasma concentration; not a dose, recommendation, therapeutic target or safety threshold.",
+      "targets": [
+        {
+          "target": "NET",
+          "kiNM": 1900,
+          "affinityLabel": "K* (illustrative model scale)",
+          "action": "inhibitor",
+          "efficacy": 0,
+          "evidenceType": "illustrative",
+          "modelAssumption": true,
+          "subtype": "SLC6A2",
+          "evidence": {
+            "type": "illustrative",
+            "note": "K*1900 nM uses the reported 1.9 µM norepinephrine-uptake IC50 only as a rough model response scale. IC50 is not Ki and is not converted to an equilibrium affinity.",
+            "sourceIds": [
+              "bupropion-assay",
+              "bupropion-label"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "bupropion-assay",
+              "bupropion-label"
+            ]
+          }
+        },
+        {
+          "target": "DAT",
+          "kiNM": 1000,
+          "affinityLabel": "K* (illustrative model scale)",
+          "action": "inhibitor",
+          "efficacy": 0,
+          "evidenceType": "illustrative",
+          "modelAssumption": true,
+          "subtype": "SLC6A3",
+          "evidence": {
+            "type": "illustrative",
+            "note": "K*1000 nM is an illustrative DAT response scale; the label supports weak dopamine-reuptake inhibition, not this numeric Ki.",
+            "sourceIds": [
+              "bupropion-assay",
+              "bupropion-label"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "bupropion-assay",
+              "bupropion-label"
+            ]
+          }
+        }
+      ],
+      "pk": {
+        "halfLifeH": 21,
+        "freeFraction": 0.16,
+        "brainPartition": 1,
+        "brainEquilibrationH": 0.25,
+        "evidence": {
+          "halfLifeH": {
+            "type": "representative",
+            "note": "Labeled mean chronic-dosing parent half-life 21±9 h; active metabolite elimination is not included.",
+            "sourceIds": [
+              "bupropion-label"
+            ]
+          },
+          "freeFraction": {
+            "type": "label-derived",
+            "note": "Free fraction 0.16 is derived from 84% in-vitro human plasma protein binding.",
+            "sourceIds": [
+              "bupropion-label"
+            ]
+          },
+          "brainPartition": {
+            "type": "illustrative",
+            "note": "Kp,uu = 1 is a teaching assumption for unbound brain/free plasma equilibrium; no tissue-specific measurement is claimed.",
+            "sourceIds": []
+          },
+          "brainEquilibrationH": {
+            "type": "illustrative",
+            "note": "15-minute effect-compartment equilibration time is a shared model setting, not a measured blood–brain barrier permeability.",
+            "sourceIds": []
+          }
+        }
+      },
+      "metabolism": {
+        "substrate": [
+          "CYP2B6"
+        ],
+        "inhibits": [
+          "CYP2D6"
+        ],
+        "evidence": {
+          "type": "qualitative-sourced",
+          "note": "CYP2B6 forms hydroxybupropion. Bupropion and active metabolites inhibit CYP2D6; representing inhibition from parent exposure alone is an approximation.",
+          "sourceIds": [
+            "bupropion-label"
+          ]
+        },
+        "fractionalClearanceEvidence": {
+          "type": "illustrative",
+          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "sourceIds": []
+        }
+      },
+      "notes": [
+        "Hydrochloride names normalize to bupropion; chloride is a counterion, not a second neuroactive ingredient.",
+        "Racemic parent; a single conformer does not represent both enantiomers or all active metabolites.",
+        "Hydroxybupropion and reduced metabolites contribute to clinical exposure and CYP2D6 inhibition. No acute parent-only model captures that contribution precisely.",
+        "Nicotinic receptor antagonism is recognized pharmacology but is not quantified in this limited target panel."
+      ],
+      "sources": [
+        {
+          "id": "pubchem-bupropion",
+          "title": "PubChem molecular identity, CID 444",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/compound/444"
+        },
+        {
+          "id": "bupropion-label",
+          "title": "DailyMed, bupropion hydrochloride prescribing information",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=6563b923-269f-40c3-b992-cbacdfca6e16"
+        },
+        {
+          "id": "bupropion-assay",
+          "title": "Damaj et al. (2004), bupropion metabolites, transporters and nicotinic receptors",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/15322260/"
+        }
+      ],
+      "unavailable3D": false,
+      "structureDimension": 3,
+      "structureNote": "Neutral parent reference conformer; not a claim about dominant protonation state in brain fluid.",
+      "pathway": [],
+      "qualitativeExposureSupported": false
+    },
+    {
+      "id": "cyanocobalamin",
+      "name": "Cyanocobalamin (B12)",
+      "aliases": [
+        "cyanocobalamin",
+        "vitamin B12",
+        "B12"
+      ],
+      "cid": 166596686,
+      "structureCid": 166596686,
+      "formula": "C63H88CoN14O14P",
+      "molecularWeight": 1355.4,
+      "class": "Vitamin cofactor precursor",
+      "modelType": "cofactor",
+      "simulationSupported": false,
+      "defaultConcentrationNM": 1,
+      "defaultExposureEvidence": "Illustrative total plasma concentration; not a dose, recommendation, therapeutic target or safety threshold.",
+      "targets": [],
+      "pk": null,
+      "metabolism": {
+        "substrate": [],
+        "inhibits": [],
+        "evidence": {
+          "type": "qualitative-sourced",
+          "note": "Requires conversion to methylcobalamin and adenosylcobalamin; no CYP receptor-occupancy simulation is applied.",
+          "sourceIds": [
+            "b12-nih"
+          ]
+        },
+        "fractionalClearanceEvidence": {
+          "type": "illustrative",
+          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "sourceIds": []
+        }
+      },
+      "notes": [
+        "B12 names resolve explicitly to cyanocobalamin here; other cobalamin forms are chemically distinct.",
+        "Converted intracellularly to cofactor forms involved in methionine synthase and methylmalonyl-CoA mutase pathways.",
+        "The acute receptor/PK engine is unsupported for this cofactor: no invented acute firing or mood effect.",
+        "PubChem CID 166596686 has no computed 3D conformer. Only a labeled 2D chemical depiction is included; cobalt coordination and solution geometry are not inferred."
+      ],
+      "sources": [
+        {
+          "id": "pubchem-cyanocobalamin",
+          "title": "PubChem molecular identity, CID 166596686",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/compound/166596686"
+        },
+        {
+          "id": "b12-nih",
+          "title": "NIH Office of Dietary Supplements, Vitamin B12",
+          "url": "https://ods.od.nih.gov/factsheets/VitaminB12-HealthProfessional/"
+        },
+        {
+          "id": "b12-uptake",
+          "title": "Gick et al. (2020), CD320-mediated cellular uptake of cobalamin",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/32898552/"
+        },
+        {
+          "id": "b12-processing",
+          "title": "Kim et al. (2008), MMACHC-mediated decyanation of vitamin B12",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18779575/"
+        },
+        {
+          "id": "b12-brain-transport",
+          "title": "Transcobalamin receptor antibodies and central B12 transport (2024)",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/38924428/"
+        }
+      ],
+      "unavailable3D": true,
+      "structureDimension": 2,
+      "formerCids": [
+        5311498
+      ],
+      "structureNote": "2D chemical record only; no inferred 3D cobalt coordination.",
+      "pathway": [
+        {
+          "stage": "Circulating carrier binding",
+          "description": "Cobalamins bind specific circulating carrier proteins. Transcobalamin presents bound vitamin to cellular uptake receptors. The displayed initial plasma amount is an annotation, not a predicted carrier partition.",
+          "sourceIds": [
+            "b12-uptake"
+          ]
+        },
+        {
+          "stage": "Cell and barrier uptake",
+          "description": "Transcobalamin-bound cobalamin can bind the CD320 receptor and enter cells by receptor-mediated uptake. Brain delivery is regulated and cannot be inferred from the entered plasma level.",
+          "sourceIds": [
+            "b12-uptake",
+            "b12-brain-transport"
+          ]
+        },
+        {
+          "stage": "Intracellular release",
+          "description": "Internalization and lysosomal processing release cobalamin from its carrier. No endocytosis rate or neuronal accumulation is assigned in this model.",
+          "sourceIds": [
+            "b12-uptake"
+          ]
+        },
+        {
+          "stage": "Cofactor processing",
+          "description": "The MMACHC trafficking protein removes the cyano ligand from cyanocobalamin. Subsequent processing supplies methylcobalamin and adenosylcobalamin cofactor forms.",
+          "sourceIds": [
+            "b12-processing",
+            "b12-nih"
+          ]
+        },
+        {
+          "stage": "Metabolic maintenance",
+          "description": "Active B12 cofactors support methionine synthase and methylmalonyl-CoA mutase pathways. This is a metabolic maintenance role, not an acute neurotransmitter receptor activation or a predicted repair response.",
+          "sourceIds": [
+            "b12-nih"
+          ]
+        }
+      ],
+      "qualitativeExposureSupported": true,
+      "qualitativeExposureNote": "The entered initial plasma concentration is recorded as an unevolved exposure annotation. Brain concentration, time-course, receptor occupancy and firing effects remain unknown, rather than zero."
+    },
+    {
+      "id": "lsd",
+      "name": "LSD (lysergide)",
+      "aliases": [
+        "LSD",
+        "LSD-25",
+        "lysergide",
+        "d-lysergic acid diethylamide",
+        "lysergic acid diethylamide"
+      ],
+      "cid": 5761,
+      "structureCid": 5761,
+      "formula": "C20H25N3O",
+      "molecularWeight": 323.4,
+      "class": "Serotonergic receptor agonist",
+      "modelType": "acute",
+      "simulationSupported": true,
+      "defaultConcentrationNM": 5,
+      "defaultExposureEvidence": "Illustrative total plasma concentration; not a dose, recommendation, therapeutic target or safety threshold.",
+      "targets": [
+        {
+          "target": "HT2A",
+          "kiNM": 14.7,
+          "affinityLabel": "Ki (assay)",
+          "action": "partial_agonist",
+          "efficacy": 0.6,
+          "evidenceType": "assay",
+          "modelAssumption": false,
+          "subtype": "HTR2A",
+          "evidence": {
+            "type": "assay",
+            "note": "Human recombinant 5-HT2A binding, [3H]ketanserin displacement, Ki 14.7 nM in the cited comparison. Other assays report different values.",
+            "sourceIds": [
+              "lsd-assay"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "lsd-assay"
+            ]
+          }
+        },
+        {
+          "target": "HT1A",
+          "kiNM": 9.5,
+          "affinityLabel": "Ki (assay)",
+          "action": "partial_agonist",
+          "efficacy": 0.5,
+          "evidenceType": "assay",
+          "modelAssumption": false,
+          "subtype": "HTR1A",
+          "evidence": {
+            "type": "assay",
+            "note": "Human recombinant 5-HT1A binding, [3H]8-OH-DPAT displacement, Ki 9.5 nM in the cited comparison. Efficacy coefficient is illustrative.",
+            "sourceIds": [
+              "lsd-assay"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "lsd-assay"
+            ]
+          }
+        }
+      ],
+      "pk": {
+        "halfLifeH": 3.6,
+        "freeFraction": 0.5,
+        "brainPartition": 1,
+        "brainEquilibrationH": 0.25,
+        "evidence": {
+          "halfLifeH": {
+            "type": "representative",
+            "note": "3.6 h reported geometric-mean half-life in an oral formulation study; individual range 2.4–7.3 h. Subjective duration is not plasma half-life.",
+            "sourceIds": [
+              "lsd-pk"
+            ]
+          },
+          "freeFraction": {
+            "type": "illustrative",
+            "note": "Free fraction 0.5 is an explicit unknown-parameter assumption; no verified human plasma binding value is claimed.",
+            "sourceIds": []
+          },
+          "brainPartition": {
+            "type": "illustrative",
+            "note": "Kp,uu = 1 is a teaching assumption for unbound brain/free plasma equilibrium; no tissue-specific measurement is claimed.",
+            "sourceIds": []
+          },
+          "brainEquilibrationH": {
+            "type": "illustrative",
+            "note": "15-minute effect-compartment equilibration time is a shared model setting, not a measured blood–brain barrier permeability.",
+            "sourceIds": []
+          }
+        }
+      },
+      "metabolism": {
+        "substrate": [
+          "CYP2D6"
+        ],
+        "inhibits": [],
+        "evidence": {
+          "type": "qualitative-sourced",
+          "note": "Human CYP2D6 phenotype affects exposure. Multiple other CYP pathways exist and are lumped into residual clearance, rather than assigned unverified fractions.",
+          "sourceIds": [
+            "lsd-cyp"
+          ]
+        },
+        "fractionalClearanceEvidence": {
+          "type": "illustrative",
+          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "sourceIds": []
+        }
+      },
+      "notes": [
+        "The structure is the specified d-lysergide stereoisomer; no isomer substitution is made.",
+        "Assay-dependent affinity and model efficacy do not predict subjective effects or receptor signaling bias.",
+        "Long receptor residence, receptor adaptation and circuit context are omitted.",
+        "Interactions with serotonergic drugs can involve competing PK and PD effects; an additive serotonergic score is not a validated clinical prediction."
+      ],
+      "sources": [
+        {
+          "id": "pubchem-lsd",
+          "title": "PubChem molecular identity, CID 5761",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/compound/5761"
+        },
+        {
+          "id": "lsd-assay",
+          "title": "Halberstadt et al., pharmacology of LSD and 1-acyl derivatives, primary binding study",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9191647/"
+        },
+        {
+          "id": "lsd-pk",
+          "title": "Holze et al. (2019), pharmacokinetics of an oral LSD formulation",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/30883864/"
+        },
+        {
+          "id": "lsd-cyp",
+          "title": "Vizeli et al. (2021), genetic influence of CYP2D6 on LSD pharmacokinetics",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34035391/"
+        },
+        {
+          "id": "lsd-interaction",
+          "title": "Paroxetine–LSD randomized crossover clinical trial (2025)",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/40022427/"
+        }
+      ],
+      "unavailable3D": false,
+      "structureDimension": 3,
+      "structureNote": "Neutral parent reference conformer; not a claim about dominant protonation state in brain fluid.",
+      "pathway": [],
+      "qualitativeExposureSupported": false
+    },
+    {
+      "id": "caffeine",
+      "name": "Caffeine",
+      "aliases": [
+        "1,3,7-trimethylxanthine"
+      ],
+      "cid": 2519,
+      "structureCid": 2519,
+      "formula": "C8H10N4O2",
+      "molecularWeight": 194.19,
+      "class": "Adenosine receptor antagonist",
+      "modelType": "acute",
+      "simulationSupported": true,
+      "defaultConcentrationNM": 10000,
+      "defaultExposureEvidence": "Illustrative total plasma concentration; not a dose, recommendation, therapeutic target or safety threshold.",
+      "targets": [
+        {
+          "target": "ADENOSINE",
+          "kiNM": 10000,
+          "affinityLabel": "K* (illustrative model scale)",
+          "action": "antagonist",
+          "efficacy": 0,
+          "evidenceType": "illustrative",
+          "modelAssumption": true,
+          "subtype": "A1/A2A lumped",
+          "evidence": {
+            "type": "illustrative",
+            "note": "K*10000 nM is a lumped illustrative response scale for adenosine antagonism, not a measured shared A1/A2A Ki.",
+            "sourceIds": [
+              "caffeine-receptor",
+              "caffeine-a1"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "caffeine-receptor"
+            ]
+          }
+        }
+      ],
+      "pk": {
+        "halfLifeH": 5,
+        "freeFraction": 0.7,
+        "brainPartition": 1,
+        "brainEquilibrationH": 0.25,
+        "evidence": {
+          "halfLifeH": {
+            "type": "representative",
+            "note": "Approximately 5 h in the cited healthy-volunteer experiment; CYP activity and other conditions can change clearance.",
+            "sourceIds": [
+              "caffeine-pk"
+            ]
+          },
+          "freeFraction": {
+            "type": "illustrative",
+            "note": "Free fraction 0.7 is an illustrative fixed binding approximation.",
+            "sourceIds": []
+          },
+          "brainPartition": {
+            "type": "illustrative",
+            "note": "Kp,uu = 1 is a teaching assumption for unbound brain/free plasma equilibrium; no tissue-specific measurement is claimed.",
+            "sourceIds": []
+          },
+          "brainEquilibrationH": {
+            "type": "illustrative",
+            "note": "15-minute effect-compartment equilibration time is a shared model setting, not a measured blood–brain barrier permeability.",
+            "sourceIds": []
+          }
+        }
+      },
+      "metabolism": {
+        "substrate": [
+          "CYP1A2"
+        ],
+        "inhibits": [],
+        "evidence": {
+          "type": "qualitative-sourced",
+          "note": "CYP1A2 is the principal metabolic pathway; active methylxanthine metabolites are omitted.",
+          "sourceIds": [
+            "caffeine-cyp"
+          ]
+        },
+        "fractionalClearanceEvidence": {
+          "type": "illustrative",
+          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "sourceIds": []
+        }
+      },
+      "notes": [
+        "A1 and A2A receptor distributions and effects are combined into one teaching target.",
+        "The model does not equate adenosine blockade with a measured alertness score.",
+        "Tobacco smoke effects on CYP1A2 are not attributed to nicotine itself."
+      ],
+      "sources": [
+        {
+          "id": "pubchem-caffeine",
+          "title": "PubChem molecular identity, CID 2519",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/compound/2519"
+        },
+        {
+          "id": "caffeine-pk",
+          "title": "Bruce et al. (1986), caffeine in healthy human subjects",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/3741730/"
+        },
+        {
+          "id": "caffeine-cyp",
+          "title": "Adult salivary caffeine clearance study (2020)",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/32071850/"
+        },
+        {
+          "id": "caffeine-receptor",
+          "title": "Human A2A receptor occupancy by caffeine, PET study (2022)",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/35001424/"
+        },
+        {
+          "id": "caffeine-a1",
+          "title": "Human cerebral A1 receptor occupancy by caffeine, PET study (2012)",
+          "url": "https://jnm.snmjournals.org/content/53/11/1723"
+        }
+      ],
+      "unavailable3D": false,
+      "structureDimension": 3,
+      "structureNote": "Neutral parent reference conformer; not a claim about dominant protonation state in brain fluid.",
+      "pathway": [],
+      "qualitativeExposureSupported": false
+    },
+    {
+      "id": "nicotine",
+      "name": "Nicotine",
+      "aliases": [
+        "S-nicotine",
+        "(-)-nicotine"
+      ],
+      "cid": 89594,
+      "structureCid": 89594,
+      "formula": "C10H14N2",
+      "molecularWeight": 162.23,
+      "class": "Nicotinic acetylcholine receptor agonist",
+      "modelType": "acute",
+      "simulationSupported": true,
+      "defaultConcentrationNM": 100,
+      "defaultExposureEvidence": "Illustrative total plasma concentration; not a dose, recommendation, therapeutic target or safety threshold.",
+      "targets": [
+        {
+          "target": "NACHR",
+          "kiNM": 2,
+          "affinityLabel": "Ki (assay)",
+          "action": "agonist",
+          "efficacy": 1,
+          "evidenceType": "assay",
+          "modelAssumption": false,
+          "subtype": "α4β2",
+          "evidence": {
+            "type": "assay",
+            "note": "Representative humanα4β2 Ki 2 nM, [3H]nicotine displacement in SHEP1 membranes, PMID23692872. Binding potency is not channel-activation EC50.",
+            "sourceIds": [
+              "nicotine-assay"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "nicotine-assay"
+            ]
+          }
+        }
+      ],
+      "pk": {
+        "halfLifeH": 2,
+        "freeFraction": 0.95,
+        "brainPartition": 1,
+        "brainEquilibrationH": 0.25,
+        "evidence": {
+          "halfLifeH": {
+            "type": "representative",
+            "note": "2 h is the upper end of the labeled 1–2 h apparent elimination half-life; input route strongly changes onset.",
+            "sourceIds": [
+              "nicotine-label"
+            ]
+          },
+          "freeFraction": {
+            "type": "illustrative",
+            "note": "Free fraction 0.95 is a fixed illustrative low-binding assumption.",
+            "sourceIds": []
+          },
+          "brainPartition": {
+            "type": "illustrative",
+            "note": "Kp,uu = 1 is a teaching assumption for unbound brain/free plasma equilibrium; no tissue-specific measurement is claimed.",
+            "sourceIds": []
+          },
+          "brainEquilibrationH": {
+            "type": "illustrative",
+            "note": "15-minute effect-compartment equilibration time is a shared model setting, not a measured blood–brain barrier permeability.",
+            "sourceIds": []
+          }
+        }
+      },
+      "metabolism": {
+        "substrate": [
+          "CYP2A6"
+        ],
+        "inhibits": [],
+        "evidence": {
+          "type": "qualitative-sourced",
+          "note": "Human CYP2A6 contributes to oxidation to cotinine; subsequent metabolites are not simulated.",
+          "sourceIds": [
+            "nicotine-cyp"
+          ]
+        },
+        "fractionalClearanceEvidence": {
+          "type": "illustrative",
+          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "sourceIds": []
+        }
+      },
+      "notes": [
+        "The molecular identity is S-nicotine.",
+        "α4β2 binding is represented; receptor subtype diversity, rapid desensitization and withdrawal are omitted.",
+        "Tobacco smoke contains other biologically active substances; smoke-induced CYP1A2 effects are not nicotine effects."
+      ],
+      "sources": [
+        {
+          "id": "pubchem-nicotine",
+          "title": "PubChem molecular identity, CID 89594",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/compound/89594"
+        },
+        {
+          "id": "nicotine-label",
+          "title": "DailyMed, Nicotrol nasal spray clinical pharmacology",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=acb7d02d-249b-4645-ac1b-8ff9a56dd244"
+        },
+        {
+          "id": "nicotine-assay",
+          "title": "IUPHAR/BPS nicotine binding assay records, human α4β2 receptor",
+          "url": "https://www.guidetopharmacology.org/GRAC/LigandActivityRangeVisForward?ligandId=2585"
+        },
+        {
+          "id": "nicotine-cyp",
+          "title": "Nakajima et al. (1996), human CYP2A6 and nicotine oxidation",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/8937855/"
+        }
+      ],
+      "unavailable3D": false,
+      "structureDimension": 3,
+      "structureNote": "Neutral parent reference conformer; not a claim about dominant protonation state in brain fluid.",
+      "pathway": [],
+      "qualitativeExposureSupported": false
+    },
+    {
+      "id": "diazepam",
+      "name": "Diazepam",
+      "aliases": [
+        "Valium"
+      ],
+      "cid": 3016,
+      "structureCid": 3016,
+      "formula": "C16H13ClN2O",
+      "molecularWeight": 284.74,
+      "class": "GABAA positive allosteric modulator",
+      "modelType": "acute",
+      "simulationSupported": true,
+      "defaultConcentrationNM": 500,
+      "defaultExposureEvidence": "Illustrative total plasma concentration; not a dose, recommendation, therapeutic target or safety threshold.",
+      "targets": [
+        {
+          "target": "GABAA",
+          "kiNM": 10,
+          "affinityLabel": "K* (illustrative model scale)",
+          "action": "pam",
+          "efficacy": 1,
+          "evidenceType": "illustrative",
+          "modelAssumption": true,
+          "subtype": "benzodiazepine-sensitive GABAA",
+          "evidence": {
+            "type": "illustrative",
+            "note": "K*10 nM is a teaching benzodiazepine-site response scale, not an assay-specific universal GABAA Ki. Potentiation requires background GABA signaling.",
+            "sourceIds": [
+              "diazepam-assay"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Unit placeholder for the allosteric modulation model. Potentiation uses the explicitly assumed fixed gain 1 + 2 × allosteric occupancy; this is not measured intrinsic efficacy.",
+            "sourceIds": [
+              "diazepam-assay"
+            ]
+          }
+        }
+      ],
+      "pk": {
+        "halfLifeH": 48,
+        "freeFraction": 0.02,
+        "brainPartition": 1,
+        "brainEquilibrationH": 0.25,
+        "evidence": {
+          "halfLifeH": {
+            "type": "representative",
+            "note": "48 h is the labeled upper terminal half-life; a single exponential omits the faster distribution phase and long-lived active metabolites.",
+            "sourceIds": [
+              "diazepam-label"
+            ]
+          },
+          "freeFraction": {
+            "type": "label-derived",
+            "note": "Free fraction 0.02 is derived from labeled 98% binding.",
+            "sourceIds": [
+              "diazepam-label"
+            ]
+          },
+          "brainPartition": {
+            "type": "illustrative",
+            "note": "Kp,uu = 1 is a teaching assumption for unbound brain/free plasma equilibrium; no tissue-specific measurement is claimed.",
+            "sourceIds": []
+          },
+          "brainEquilibrationH": {
+            "type": "illustrative",
+            "note": "15-minute effect-compartment equilibration time is a shared model setting, not a measured blood–brain barrier permeability.",
+            "sourceIds": []
+          }
+        }
+      },
+      "metabolism": {
+        "substrate": [
+          "CYP3A4",
+          "CYP2C19"
+        ],
+        "inhibits": [],
+        "evidence": {
+          "type": "qualitative-sourced",
+          "note": "CYP3A4/CYP2C19 metabolism yields active metabolites, including N-desmethyldiazepam; glucuronidation is not modeled.",
+          "sourceIds": [
+            "diazepam-label"
+          ]
+        },
+        "fractionalClearanceEvidence": {
+          "type": "illustrative",
+          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "sourceIds": []
+        }
+      },
+      "notes": [
+        "Positive allosteric modulation is distinct from direct GABA-site agonism.",
+        "No receptor subtype-specific conductance or patient respiratory function is inferred.",
+        "Active metabolite accumulation and tolerance are omitted."
+      ],
+      "sources": [
+        {
+          "id": "pubchem-diazepam",
+          "title": "PubChem molecular identity, CID 3016",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/compound/3016"
+        },
+        {
+          "id": "diazepam-label",
+          "title": "DailyMed, diazepam prescribing information",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=8b51f4b3-a5e8-4400-b624-ac0c47630c86"
+        },
+        {
+          "id": "diazepam-assay",
+          "title": "Lavoie & Twyman (1996), diazepam modulation of GABAA receptors",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9014155/"
+        }
+      ],
+      "unavailable3D": false,
+      "structureDimension": 3,
+      "structureNote": "Neutral parent reference conformer; not a claim about dominant protonation state in brain fluid.",
+      "pathway": [],
+      "qualitativeExposureSupported": false
+    },
+    {
+      "id": "ketamine",
+      "name": "Ketamine",
+      "aliases": [
+        "racemic ketamine",
+        "ketamine hydrochloride",
+        "Ketalar"
+      ],
+      "cid": 3821,
+      "structureCid": 3821,
+      "formula": "C13H16ClNO",
+      "molecularWeight": 237.72,
+      "class": "NMDA receptor channel blocker",
+      "modelType": "acute",
+      "simulationSupported": true,
+      "defaultConcentrationNM": 1000,
+      "defaultExposureEvidence": "Illustrative total plasma concentration; not a dose, recommendation, therapeutic target or safety threshold.",
+      "targets": [
+        {
+          "target": "NMDA",
+          "kiNM": 500,
+          "affinityLabel": "K* (illustrative model scale)",
+          "action": "channel_blocker",
+          "efficacy": 0,
+          "evidenceType": "illustrative",
+          "modelAssumption": true,
+          "subtype": "NMDA receptor channel",
+          "evidence": {
+            "type": "illustrative",
+            "note": "K*500 nM is an illustrative NMDA-channel response scale, not a shared equilibrium Ki for every subunit, enantiomer or membrane potential.",
+            "sourceIds": [
+              "ketamine-assay",
+              "ketamine-label"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "ketamine-assay",
+              "ketamine-label"
+            ]
+          }
+        }
+      ],
+      "pk": {
+        "halfLifeH": 2.5,
+        "freeFraction": 0.8,
+        "brainPartition": 1,
+        "brainEquilibrationH": 0.25,
+        "evidence": {
+          "halfLifeH": {
+            "type": "representative",
+            "note": "2.5 h is the labeled redistribution beta-phase value used as a coarse timescale; it is not a fitted one-compartment terminal clearance parameter.",
+            "sourceIds": [
+              "ketamine-label"
+            ]
+          },
+          "freeFraction": {
+            "type": "illustrative",
+            "note": "Free fraction 0.8 is an illustrative fixed model value.",
+            "sourceIds": []
+          },
+          "brainPartition": {
+            "type": "illustrative",
+            "note": "Kp,uu = 1 is a teaching assumption for unbound brain/free plasma equilibrium; no tissue-specific measurement is claimed.",
+            "sourceIds": []
+          },
+          "brainEquilibrationH": {
+            "type": "illustrative",
+            "note": "15-minute effect-compartment equilibration time is a shared model setting, not a measured blood–brain barrier permeability.",
+            "sourceIds": []
+          }
+        }
+      },
+      "metabolism": {
+        "substrate": [
+          "CYP2B6",
+          "CYP3A4"
+        ],
+        "inhibits": [],
+        "evidence": {
+          "type": "qualitative-sourced",
+          "note": "N-dealkylation forms active norketamine primarily through CYP2B6 and CYP3A4; metabolites are omitted.",
+          "sourceIds": [
+            "ketamine-label"
+          ]
+        },
+        "fractionalClearanceEvidence": {
+          "type": "illustrative",
+          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "sourceIds": []
+        }
+      },
+      "notes": [
+        "Racemic identity; one conformer does not represent an equal mixture of both enantiomers. Esketamine is not silently substituted.",
+        "Channel blockade is use- and voltage-dependent; the equilibrium occupancy approximation omits these mechanisms.",
+        "The model does not reproduce anesthesia, dissociation or delayed plasticity."
+      ],
+      "sources": [
+        {
+          "id": "pubchem-ketamine",
+          "title": "PubChem molecular identity, CID 3821",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/compound/3821"
+        },
+        {
+          "id": "ketamine-label",
+          "title": "DailyMed, Ketalar prescribing information",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=14e8f864-8b8a-4e7e-8439-e510d3107063"
+        },
+        {
+          "id": "ketamine-assay",
+          "title": "Synthesis and NMDA receptor activity of ketamine metabolites (2017)",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5641405/"
+        }
+      ],
+      "unavailable3D": false,
+      "structureDimension": 3,
+      "structureNote": "Neutral parent reference conformer; not a claim about dominant protonation state in brain fluid.",
+      "pathway": [],
+      "qualitativeExposureSupported": false
+    },
+    {
+      "id": "fluoxetine",
+      "name": "Fluoxetine",
+      "aliases": [
+        "Prozac",
+        "fluoxetine hydrochloride"
+      ],
+      "cid": 3386,
+      "structureCid": 3386,
+      "formula": "C17H18F3NO",
+      "molecularWeight": 309.33,
+      "class": "SSRI",
+      "modelType": "acute",
+      "simulationSupported": true,
+      "defaultConcentrationNM": 300,
+      "defaultExposureEvidence": "Illustrative total plasma concentration; not a dose, recommendation, therapeutic target or safety threshold.",
+      "targets": [
+        {
+          "target": "SERT",
+          "kiNM": 1,
+          "affinityLabel": "K* (illustrative model scale)",
+          "action": "inhibitor",
+          "efficacy": 0,
+          "evidenceType": "illustrative",
+          "modelAssumption": true,
+          "subtype": "SLC6A4",
+          "evidence": {
+            "type": "illustrative",
+            "note": "K*1 nM is a rounded educational SERT affinity scale, not a reproduced exact assay value. Human transporter binding is documented in the cited study.",
+            "sourceIds": [
+              "fluoxetine-assay",
+              "fluoxetine-label"
+            ]
+          },
+          "efficacyEvidence": {
+            "type": "illustrative",
+            "note": "Dimensionless model response coefficient; not a measured intrinsic efficacy or a clinical effect size.",
+            "sourceIds": [
+              "fluoxetine-assay",
+              "fluoxetine-label"
+            ]
+          }
+        }
+      ],
+      "pk": {
+        "halfLifeH": 120,
+        "freeFraction": 0.055,
+        "brainPartition": 1,
+        "brainEquilibrationH": 0.25,
+        "evidence": {
+          "halfLifeH": {
+            "type": "representative",
+            "note": "120 h is the midpoint of the labeled 4–6 day half-life after chronic dosing; acute half-life is shorter. Norfluoxetine is omitted.",
+            "sourceIds": [
+              "fluoxetine-label"
+            ]
+          },
+          "freeFraction": {
+            "type": "label-derived",
+            "note": "Free fraction 0.055 is derived from labeled 94.5% in-vitro human serum protein binding.",
+            "sourceIds": [
+              "fluoxetine-label"
+            ]
+          },
+          "brainPartition": {
+            "type": "illustrative",
+            "note": "Kp,uu = 1 is a teaching assumption for unbound brain/free plasma equilibrium; no tissue-specific measurement is claimed.",
+            "sourceIds": []
+          },
+          "brainEquilibrationH": {
+            "type": "illustrative",
+            "note": "15-minute effect-compartment equilibration time is a shared model setting, not a measured blood–brain barrier permeability.",
+            "sourceIds": []
+          }
+        }
+      },
+      "metabolism": {
+        "substrate": [
+          "CYP2D6"
+        ],
+        "inhibits": [
+          "CYP2D6"
+        ],
+        "evidence": {
+          "type": "qualitative-sourced",
+          "note": "CYP2D6 metabolism and inhibition are represented qualitatively. Other pathways, nonlinear kinetics and active norfluoxetine are omitted.",
+          "sourceIds": [
+            "fluoxetine-label"
+          ]
+        },
+        "fractionalClearanceEvidence": {
+          "type": "illustrative",
+          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "sourceIds": []
+        }
+      },
+      "notes": [
+        "Racemic molecular identity with a representative conformer.",
+        "Norfluoxetine is active and long-lived; parent-only decay is not total active exposure.",
+        "Combining SERT inhibitors increases competition in the simplified model; clinical outcomes are not inferred."
+      ],
+      "sources": [
+        {
+          "id": "pubchem-fluoxetine",
+          "title": "PubChem molecular identity, CID 3386",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/compound/3386"
+        },
+        {
+          "id": "fluoxetine-label",
+          "title": "DailyMed, fluoxetine prescribing information",
+          "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=a9ed97dd-8041-4a02-889c-dcb8b2805f36"
+        },
+        {
+          "id": "fluoxetine-assay",
+          "title": "Tatsumi et al. (1997), antidepressants at human monoamine transporters",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9537821/"
+        }
+      ],
+      "unavailable3D": false,
+      "structureDimension": 3,
+      "structureNote": "Neutral parent reference conformer; not a claim about dominant protonation state in brain fluid.",
+      "pathway": [],
+      "qualitativeExposureSupported": false
+    }
+  ],
+  "interactionEvidence": [
+    {
+      "id": "cyp2d6-inhibition",
+      "mechanism": "CYP2D6 inhibition can reduce clearance of susceptible substrates.",
+      "examples": [
+        {
+          "inhibitor": "bupropion",
+          "substrate": "aripiprazole"
+        },
+        {
+          "inhibitor": "fluoxetine",
+          "substrate": "aripiprazole"
+        }
+      ],
+      "direction": "possible increased parent-drug exposure",
+      "quantitativeStatus": "qualitative mechanism; numeric model magnitude is illustrative",
+      "sourceIds": [
+        "bupropion-label",
+        "aripiprazole-label",
+        "fluoxetine-label"
+      ]
+    },
+    {
+      "id": "serotonergic-combinations",
+      "mechanism": "Receptor/transporter effects and metabolic effects may oppose one another; chronic receptor adaptation is omitted.",
+      "quantitativeStatus": "uncertain; no general additive clinical score",
+      "sourceIds": [
+        "lsd-interaction",
+        "lsd-cyp",
+        "escitalopram-label"
+      ]
+    }
+  ]
+}

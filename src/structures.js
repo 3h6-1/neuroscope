@@ -6,10 +6,11 @@ const ELEMENTS = {
   O: { color: 0xfa7d79, radius: 0.33, name: 'Oxygen' },
   F: { color: 0xa3e5bd, radius: 0.32, name: 'Fluorine' },
   H: { color: 0xf0f4f2, radius: 0.21, name: 'Hydrogen' },
+  CO: { color: 0xdc96c5, radius: 0.48, name: 'Cobalt' },
   S: { color: 0xe9cc81, radius: 0.43, name: 'Sulfur' },
   P: { color: 0xe9a581, radius: 0.43, name: 'Phosphorus' },
   NA: { color: 0xbfc4ff, radius: 0.9, name: 'Sodium' },
-  CL: { color: 0xa3e5bd, radius: 0.8, name: 'Chloride' },
+  CL: { color: 0xa3e5bd, radius: 0.8, name: 'Chlorine' },
 };
 const ATOM_GEOMETRY = new THREE.SphereGeometry(1, 20, 14);
 const BOND_GEOMETRY = new THREE.CylinderGeometry(1, 1, 1, 12);
@@ -71,8 +72,8 @@ export function buildMolecule(data, { scale = 1, hydrogens = true } = {}) {
   group.scale.setScalar(scale);
   group.userData = {
     label: group.name, type: 'molecule', formula: data.formula,
-    description: data.note ?? (Array.isArray(data.notes) ? data.notes.join(' ') : data.notes) ?? 'Ball-and-stick representation of the supplied three-dimensional coordinates. Atomic radii are display radii, not a solvent-accessible surface.',
-    units: data.units ?? 'angstrom', cid: data.cid, charge: data.charge,
+    description: data.note ?? (Array.isArray(data.notes) ? data.notes.join(' ') : data.notes) ?? (data.dimension === 2 ? 'Two-dimensional connectivity diagram; no physical three-dimensional conformation is supplied.' : 'Ball-and-stick representation of the supplied three-dimensional coordinates. Atomic radii are display radii, not a solvent-accessible surface.'),
+    units: data.units ?? (data.dimension === 2 ? '2D diagram units' : 'angstrom'), cid: data.cid, charge: data.charge,
     atomCount: data.atoms.length, bondCount: data.bonds.length,
     stereochemistry: data.stereochemistry, provenance: data.provenance,
   };
@@ -92,7 +93,7 @@ export function buildMolecule(data, { scale = 1, hydrogens = true } = {}) {
     const chiralityText = chirality ? ` ${chirality.configuration} stereocenter; supplied coordinates preserve the verified absolute configuration.` : '';
     ball.userData = {
       label: `${info.name}${atom.name ? ` ${atom.name}` : ` · atom ${atom.id + 1}`}${chirality ? ` · ${chirality.configuration} stereocenter` : ''}`,
-      description: `${group.name}. ${info.name} atom in the supplied ${data.resName ? 'experimental heavy-atom pose' : 'three-dimensional conformer'}.${chargeText}${chiralityText}`,
+      description: `${group.name}. ${info.name} atom in the supplied ${data.dimension === 2 ? 'two-dimensional connectivity diagram; no physical 3D conformation is available' : data.resName ? 'experimental heavy-atom pose' : 'three-dimensional conformer'}.${chargeText}${chiralityText}`,
       type: 'atom', element: atom.element, atomId: atom.id,
       hydrogen: atom.element.toUpperCase() === 'H', charge: atom.charge ?? null,
       configuration: chirality?.configuration,
@@ -108,15 +109,18 @@ export function buildMolecule(data, { scale = 1, hydrogens = true } = {}) {
     const start = position(a), end = position(b);
     const hydrogen = a.element.toUpperCase() === 'H' || b.element.toUpperCase() === 'H';
     const order = Number(bond.order ?? 1);
+    const bondName = ({ 1: 'Single bond', 1.5: 'Aromatic bond', 2: 'Double bond', 3: 'Triple bond', 4: 'Quadruple bond', 5: 'Dative bond', 6: 'Complex bond', 7: 'Ionic association', 255: 'Unspecified connection' })[order];
+    if (!bondName) throw new Error(`Unsupported bond type ${order}.`);
+    const specialConnection = [5, 6, 7, 255].includes(order);
     const offset = bondOffset(a, b, atoms, data.bonds);
-    const offsets = order === 3 ? [-0.21, 0, 0.21] : order === 2 || order === 1.5 ? [-0.115, 0.115] : [0];
-    const radius = hydrogen ? 0.055 : order >= 2 ? 0.067 : 0.092;
+    const offsets = order === 4 ? [-0.3, -0.1, 0.1, 0.3] : order === 3 ? [-0.21, 0, 0.21] : order === 2 || order === 1.5 ? [-0.115, 0.115] : [0];
+    const radius = hydrogen ? 0.055 : specialConnection || order >= 2 ? 0.067 : 0.092;
     const bondGroup = new THREE.Group();
-    bondGroup.name = `${order === 1.5 ? 'Aromatic' : order === 3 ? 'Triple' : order === 2 ? 'Double' : 'Single'} bond`;
+    bondGroup.name = bondName;
     bondGroup.visible = hydrogens || !hydrogen;
     bondGroup.userData = {
       label: `${a.element}–${b.element} ${bondGroup.name.toLowerCase()}`,
-      description: `Connectivity and bond order ${order} from the supplied molecular data. Cylinders are a ball-and-stick drawing convention.`,
+      description: specialConnection ? `${bondName} from source connectivity code ${order}. The dashed connector marks an association, not a numerical covalent bond order or a computed coordination geometry.` : `Connectivity and bond order ${order} from the supplied molecular data. Cylinders are a ball-and-stick drawing convention.`,
       type: 'bond', a: a.id, b: b.id, order, hydrogen,
     };
     const drawStroke = (from, to, lo = 0, hi = 1) => {
@@ -135,7 +139,7 @@ export function buildMolecule(data, { scale = 1, hydrogens = true } = {}) {
     offsets.forEach((distance, index) => {
       const from = start.clone().addScaledVector(offset, distance);
       const to = end.clone().addScaledVector(offset, distance);
-      if (order === 1.5 && index === 1) {
+      if (specialConnection || (order === 1.5 && index === 1)) {
         // Delocalized bond depiction: solid plus dashed, without changing coordinates.
         for (let dash = 0; dash < 4; dash++) {
           const lo = (dash + 0.12) / 4;

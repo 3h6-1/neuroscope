@@ -1,9 +1,9 @@
 {
-  "name": "synapse-escitalopram-lab",
-  "version": "1.0.0",
+  "name": "neuroscope-lab",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Interactive multiscale 3D serotonin and escitalopram educational simulation",
+  "description": "Interactive 3D brain pharmacology laboratory with molecular structures, plasma-brain exchange, target interactions, and illustrative neuronal activity",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",

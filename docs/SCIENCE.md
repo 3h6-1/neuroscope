@@ -1,6 +1,6 @@
-# Scientific scope, molecular provenance and model limits
+# Serotonin microdomain: structure, diffusion and reaction kinetics
 
-This program is an interactive **educational reaction–diffusion model**, with sourced molecular structures and procedural neuron anatomy. It illustrates how escitalopram inhibits the serotonin transporter (SERT). It is not a whole-brain reconstruction, a molecular-dynamics trajectory, a validated dosing model or an explanation of every downstream effect of an SSRI.
+This document covers the serotonin microdomain and reference structures within **NeuroScope**. The generalized circulation, compound profiles, receptor competition, interaction mechanisms and firing circuit are documented in [PHARMACOLOGY.md](PHARMACOLOGY.md). The microdomain is an educational reaction–diffusion model with sourced molecular structures and procedural neuron anatomy; SERT inhibitors can inhibit its serotonin reuptake. It is not a whole-brain reconstruction, a molecular-dynamics trajectory, a validated dosing model or an explanation of every downstream effect of an SSRI.
 
 ## What is structurally authentic
 

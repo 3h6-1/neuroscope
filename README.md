@@ -1,90 +1,133 @@
-# Synapse — Escitalopram Lab
+# NeuroScope — Brain Pharmacology Lab
 
-An interactive 3D browser program for exploring serotonin release, SERT-mediated reuptake, and inhibition by **escitalopram**. Written in JavaScript with Three.js; computation and rendering are separate. All molecular data is bundled locally.
+**NeuroScope 2.0.0** is an interactive 3D browser program for exploring brain-active molecules, circulation, blood–brain exchange, target interactions and neuronal activity. Written in JavaScript with Three.js, it combines sourced molecular structures with explicitly bounded computational models. Numerical engines run independently of rendering.
 
-## Run
+[Open the hosted NeuroScope lab](https://neuroscope-lab.adepttuna5.chatgpt.site). The site's existing private audience is preserved; the link does not grant public access.
 
-Requires Node.js 20.19+ or 22+ and a browser with WebGL 2.
+## Run locally
+
+Use Node.js 20.19+ or 22+ and a browser with WebGL 2.
 
 ```sh
 npm ci
+npm test
 npm run dev
 ```
 
-Open the localhost URL printed by Vite. To build a portable static web application:
+Open the localhost URL printed by Vite. Build and preview the static application with:
 
 ```sh
 npm run build
 npm run preview
 ```
 
-The `dist/` directory can be served by any ordinary static HTTP server. Loading `index.html` directly through `file://` does not work because browsers restrict module/data requests. Only the optional Google Fonts styling uses an external request; fallback fonts work offline. No account, server API, or external scientific data request is needed to run the local simulator after installing dependencies.
+Serve `dist/` through an HTTP server. Opening `index.html` with `file://` will not load browser modules and data correctly. The curated catalog, structures and numerical engines are bundled for local use. Looking up additional compounds requires access to PubChem; unavailable network requests do not remove the bundled library. Optional web fonts have local fallbacks. No application backend is required.
 
-## Explore
+## Explore the laboratory
 
-- **Synapse:** phospholipid bilayers, presynaptic bouton, axon/microtubules, vesicles, calcium channels, mitochondria/cristae, postsynaptic spine/actin and parent dendrite. Twelve-helix SERT glyphs show drug/substrate occupancy; seven-helix generic receptor glyphs show binding. Serotonin is tracked through diffusion, binding, reuptake, recycling, and clearance. Enlarged molecular glyphs retain the sourced heavy-atom conformers.
-- **Neurons:** representative somas, nuclei, axon, dendritic arbor/spines, synaptic contact, and varicose serotonergic release sites. This is schematic cellular morphology, not a reconstructed serotonergic circuit.
-- **Molecules:** escitalopram⁺, serotonin⁺, and the real 5I71 SERT Cα backbone with its deposited bound ligand, pocket atoms, and sodium ions. Atom/bond picking reports chemistry; hydrogens can be hidden.
-- **Experiment:** paired baseline/drug runs use seed 42. Control the free-drug reservoir (0–100 nM), toggle release, or release a pulse of 60 molecules. Concentration changes preserve existing occupied transporters and let them unbind normally.
-- **Playback:** pause, resume, single step, 0.1×–5× speed, reset, and seek within the last 120 seconds. Resuming or editing an earlier checkpoint branches the run. Data stays in browser memory; refresh starts a new run.
+- **Circulation:** add one or more virtual exposures and inspect the schematic body, bloodstream, organs and distribution. Inputs are increments of initial **total plasma concentration in nM**, not administered doses.
+- **Blood–brain barrier:** inspect a magnified neurovascular unit with endothelial cells, tight junctions, supporting cells and a separate brain compartment. Tracers illustrate circulation; their speed and number do not measure blood flow or molecular flux.
+- **Neural circuit:** compare a 40-cell excitatory/inhibitory spiking network with a matched baseline using the same connectivity and noise. Voltage traces, spike rasters and firing rates display the consequences of the chosen model.
+- **Synapse:** follow serotonin release, diffusion, binding, SERT reuptake, recycling and clearance in the retained stochastic microdomain. The general model's SERT inhibitor load drives an illustrative connection to this view.
+- **Structure:** inspect atoms, bonds, hydrogens and stereochemistry. The library also includes serotonin and the experimental SERT structure 5I71 with its bound ligand. Experimental protein geometry remains static.
+- **Targets and interactions:** compare transporter inhibition, antagonism, partial agonism, positive allosteric modulation and channel blockade. Occupancy and activation are separate quantities. Evidence notes distinguish assay values from model assumptions.
+
+### Find a molecule
+
+Search by **name, PubChem CID, chemical formula or SMILES**, choosing an explicit input mode when auto-detection is ambiguous. A formula can match several constitutional or stereochemical isomers; select a specific candidate rather than treating a formula as a unique identity. Stereochemical SMILES and specific CIDs preserve more identity information than an informal name.
+
+Ten curated profiles use the same evidence schema:
+
+| Compound | Modeled role |
+| --- | --- |
+| Escitalopram | SERT inhibition |
+| Aripiprazole | D2/5-HT1A partial agonism and 5-HT2A antagonism |
+| Bupropion | NET/DAT inhibition; selected metabolic interaction |
+| Cyanocobalamin (B12) | Qualitative transport and cofactor pathway |
+| LSD / lysergide | 5-HT2A/5-HT1A agonism |
+| Caffeine | Lumped adenosine antagonism |
+| Nicotine | α4β2 nicotinic receptor agonism |
+| Diazepam | GABAA positive allosteric modulation |
+| Ketamine | NMDA channel blockade |
+| Fluoxetine | SERT inhibition |
+
+Recognized salt aliases normalize to a specified parent moiety: for example, bupropion hydrochloride resolves to bupropion. Formulation-dependent absorption is not inferred. “B12” selects the explicitly named cyanocobalamin form, not every cobalamin.
+
+Additional PubChem compounds can be viewed as structures. **Molecular identity or geometry alone does not supply a brain-effect model.** Quantitative simulation of an unknown compound requires an explicit custom PK/PD profile; missing pharmacology is not guessed. Select **Define a research profile** to enter half-life, unbound plasma fraction, unbound brain/plasma partition ratio and equilibration time, then add target, action, affinity-scale and efficacy hypotheses. An optional reference URL can accompany the profile. These manually supplied values are labeled user assumptions, and experiment exports preserve them. PubChem 3D conformers are used when available. A fallback 2D record remains visibly labeled as a connectivity diagram.
+
+Cyanocobalamin has a 2D structure and a sourced qualitative pathway through carrier binding, cellular uptake, intracellular processing and cofactor function. Its entered plasma concentration is a recorded annotation, not an evolving PK trace. Brain concentration and acute firing effects remain unknown. The program does not invent B12 uptake rates, repair kinetics or neurotransmitter-receptor activation.
+
+### Navigation and playback
 
 | Input | Action |
 | --- | --- |
 | Left drag / one finger | Orbit |
 | Wheel / pinch | Zoom |
 | Right drag / two fingers | Pan |
-| `F` | Toggle fly mode |
+| `F` | Toggle fly navigation |
 | Fly mode: drag | Look around |
 | Fly mode: `W A S D` | Move |
-| Fly mode: `Q E`, `Shift` | Down/up; faster movement |
+| Fly mode: `Q E`, `Shift` | Down/up; move faster |
 | `0` | Reset camera |
 | `Space` | Pause/resume |
-| `R` | Release serotonin |
 
-Camera navigation works while the simulation is paused. Select **The model**, **Sources**, or **?** inside the app for assumptions, provenance, and controls.
+Camera movement remains available while paused. Playback includes pause/resume, single-step, speed selection, reset and history replay. Returning to an earlier checkpoint and continuing creates a new continuation of that experiment. Export an experiment to JSON for saving; import it to restore supported model state and continue a reproducible run. Browser memory is temporary, so export work before refreshing.
 
-## Scientific scope
+**There are separate scientific clocks.** At 1× speed, each second of playback advances systemic PK by **0.5 hours**, the neural network by **25 milliseconds**, and the legacy serotonin microdomain by **1 second**. These simultaneous views do not represent one shared physical time. The systemic clock can be held while the neural network continues, allowing a fixed exposure to be examined. Rendering frames and playback speed do not change the internal integration steps:
 
-This is a **mesoscopic educational model, not atomistic molecular dynamics**. It does not simulate every biological consequence of escitalopram.
+| Layer | Internal step | Method |
+| --- | --- | --- |
+| Plasma/brain PK | 1/240 hour | Exact two-compartment matrix exponential within each step; interaction-dependent clearance held within the step |
+| Neural network | 0.25 ms | Izhikevich point neurons with two half steps for voltage |
+| Serotonin microdomain | 0.01 s | Gillespie reaction events and reflected Brownian endpoint sampling |
 
-Small-molecule coordinates are authentic **computed PubChem conformers**, including correct protonation and escitalopram's independently checked S stereochemistry. The SERT backbone and bound ligand come from the **experimental 3.15 Å crystal structure 5I71**, an engineered thermostabilized construct. Protein glyphs, neuron anatomy, fusion pulses, and transporter gate motion are schematic. The experimental backbone is static; there is no fabricated minimum-energy conformational pathway.
+## Scientific scope and evidence
 
-The model combines exact reflected Brownian endpoint sampling with well-mixed Gillespie stochastic chemical reactions. Numerical rates are illustrative, not fitted in vivo measurements. Positions use nm, time uses s, substrate concentration uses μM, and free-drug concentration uses nM. The default diffusion coefficient is 4×10⁸ nm²/s; the estimated 20 nm cleft crossing time is 0.5 μs. The 10 ms display/reaction partition cannot resolve those microscopic paths. Interpolated visual movement is explanatory; apparent collisions do not cause binding.
+See [docs/PHARMACOLOGY.md](docs/PHARMACOLOGY.md) for the general model's equations, units, catalog provenance, parameter evidence and limits. [docs/SCIENCE.md](docs/SCIENCE.md) documents the retained serotonin microdomain and SERT structure.
 
-Drug reservoir tracers are decorative; explicit serotonin state transitions are conserved. Receptor occupancy is not a firing rate or a measure of mood. Ion gradients are assumed maintained. Pharmacokinetics, autoreceptor feedback, allosteric binding, action potentials, membrane electrodynamics, explicit solvent, VMAT2 mechanics, metabolism, and weeks-long adaptation are outside the integrated model. See [docs/SCIENCE.md](docs/SCIENCE.md) for equations, all parameters, citations, provenance, and limitations.
+Small-molecule 3D coordinates are **computed PubChem conformers**, not experimentally measured solution ensembles or a calculated receptor-binding trajectory. Coordinates retain bond connectivity, formal charges and source provenance. Escitalopram, nicotine and lysergide stereochemistry is checked from coordinates. A representative conformer of an unspecified/racemic parent is labeled accordingly. Most reference structures are neutral parent forms; they are not claims about the predominant physiological protonation state. The escitalopram reference explicitly depicts its cation.
+
+SERT uses the experimental **3.15 Å 5I71 crystal structure**, an engineered construct. Anatomy, circulation, receptor glyphs and network wiring are schematic. The program does not calculate solvent dynamics, molecular forces, protein conformational free-energy pathways, complete brain anatomy or whole-human physiology.
+
+The PK system conserves modeled amounts across plasma, a brain unbound-equivalent compartment and an elimination ledger. Target competition uses sourced affinities where supported and clearly labeled illustrative response scales elsewhere. All numeric efficacy values, brain partition settings and target-to-circuit couplings are model assumptions. Selected CYP relationships are sourced, while their quantitative inhibition strengths are illustrative. Active metabolites and most biological adaptations are omitted.
+
+The firing traces show what these equations produce. They do not predict a person's perception, mood, clinical response or risks from a combination. Missing modeled interactions indicate incomplete coverage. Passing software tests verifies implementation properties, not biological calibration.
 
 ## Tests
 
-```sh
-npm test
-```
+`npm test` runs Node.js tests covering:
 
-Automated tests cover:
-
-- Brownian zero mean, per-axis variance 2DΔt, 3D mean-squared displacement 6DΔt, reflecting boundaries, and uniform confinement.
-- Independence of fixed-step results from rendering frame partitions, seeded reproducibility, JSON checkpoint continuation, and source-rate/cap constraints.
-- Drug-only equilibrium occupancy, washout/dissociation, statistically reduced reuptake under drug, and exact serotonin accounting across all states.
-- Unit conversions, exponential hazards, competitive transport, and a standalone Bateman-function helper (not connected to the local synapse).
-- Molecular formulas, charge/valence/connectivity, bond geometry, protonation, and coordinate-derived S chirality, including the mirrored-conformer negative control.
-- Coordinate-preserving geometry, quaternion bond alignment, hydrogen controls, SERT protein/ligand frame alignment, and finite vertices/transforms.
-
-Browser verification additionally checks loading, pause/step/replay, views, structure selection, controls, layout and console errors. Tests establish implementation properties; they do not biologically validate the illustrative parameter set.
+- PK mass balance, nonnegative concentrations, exchange equilibrium, terminal half-life behavior, competition, modulation and selected metabolic interactions.
+- Neural spike/reset dynamics, excitatory/inhibitory signs, matched controls, integration convergence and seeded reproducibility.
+- Frame-partition independence and JSON checkpoint continuation for the numerical engines.
+- Serotonin diffusion statistics, confinement, reaction accounting, equilibrium occupancy and reduced reuptake under inhibition.
+- Catalog identities, aliases, evidence classifications, supported versus unsupported mechanisms and explicitly qualitative B12 behavior.
+- Molecular composition, charge, connectivity, bond geometry, dimensionality and stereochemistry, including mirrored-coordinate negative controls.
+- Lookup ambiguity, offline aliases, source atom indexing, error handling and honest 2D fallback.
+- Finite body, barrier, neuron and molecular geometry, topology correspondence and coordinate-preserving rendering.
 
 ## Project layout
 
 ```text
-src/simulation.js       Pure numerical engine; no Three.js or browser dependency
-src/neuron.js           Schematic cell and synapse geometry
-src/structures.js       Coordinate-preserving molecule/protein rendering
-src/main.js             Rendering, camera, controls, picking and replay
-src/content.js          In-app scientific explanation and source links
-src/style.css           Responsive interface
-public/data/            Bundled molecular coordinates and provenance
-    molecules.json      PubChem conformers (oxalate retained as unused background data)
-    sert.json           Experimental 5I71 backbone, ligand and binding pocket
-    science.json        Curated evidence, equations, sources and limitations
-tests/                  Node.js numerical, chemistry and geometry tests
-docs/SCIENCE.md          Full scientific model notes
+src/experiment.js        Coupled playback clocks, checkpoints and experiment import/export
+src/pharmacology.js      Plasma/brain amounts, target competition and interactions
+src/neural.js            Seeded spiking network and matched baseline
+src/simulation.js        Stochastic serotonin microdomain
+src/lookup.js            PubChem identity search and coordinate loading
+src/body.js              Schematic body, barrier and circuit geometry
+src/neuron.js            Schematic synaptic anatomy
+src/structures.js        Coordinate-preserving molecule/protein rendering
+src/scene.js             3D views, camera, picking and display animation
+src/main.js              Application controls, state, playback and persistence
+src/content.js           In-app model notes and evidence links
+src/style.css            Responsive interface
+public/data/
+    compound-catalog.json     Ten curated profiles with evidence classifications
+    compound-structures.json  Nine 3D conformers and explicit 2D cyanocobalamin
+    molecules.json            Serotonin/escitalopram reference conformers
+    sert.json                 Experimental 5I71 backbone, ligand and pocket
+    science.json              Legacy microdomain evidence and assumptions
+tests/                  Numerical, identity, chemistry and geometry tests
+docs/PHARMACOLOGY.md     General pharmacology model and source notes
+docs/SCIENCE.md          Serotonin microdomain and molecular structure notes
 ```
-
-Molecular records include retrieval URLs and source hashes. Browser status is exposed through a read-only `window.synapseLab.getState()` helper for ordinary local developer inspection.
