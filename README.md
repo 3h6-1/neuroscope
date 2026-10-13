@@ -23,9 +23,11 @@ npm run preview
 
 ### Publish at `/neuroscope/`
 
-Run `npm run build:pages` to generate `dist/` with asset and data URLs rooted at `/neuroscope/`. Copy the contents of `dist/` into the `neuroscope/` directory of the `3h6-1.github.io` repository, then commit and push that website repository's `master` branch. Its existing GitHub Pages deployment serves the application at https://3h6-1.github.io/neuroscope/.
+Push changes to this repository's `main` branch to update https://3h6-1.github.io/neuroscope/ automatically. The [deployment workflow](.github/workflows/deploy.yml) installs locked dependencies with `npm ci`, runs `npm test`, builds with `npm run build:pages`, and deploys the resulting `dist/` artifact to GitHub Pages. A failed test or build prevents deployment and leaves the previous site available.
 
-The source repository and website repository are separate: pushing source changes alone does not update the deployed copy. The standard `npm run build` still produces a build for a domain root.
+Check progress or select **Run workflow** to redeploy `main` on the [Actions page](https://github.com/3h6-1/neuroscope/actions/workflows/deploy.yml). Publishing uses the repository's built-in GitHub token and the `github-pages` environment; no personal access token or manually copied files in `3h6-1.github.io` are needed. In repository **Settings → Pages**, the build source is **GitHub Actions**. The website repository continues to serve the main homepage independently.
+
+For a local production build, run `npm run build:pages` to generate asset and data URLs rooted at `/neuroscope/`. The standard `npm run build` still produces a build for a domain root. Each automatic deployment includes [`deployment.json`](https://3h6-1.github.io/neuroscope/deployment.json), identifying its source commit and workflow run.
 
 Serve `dist/` through an HTTP server. Opening `index.html` with `file://` will not load browser modules and data correctly. The curated catalog, structures, cortical surface, numerical engines and deterministic state inspector are bundled for local use. Looking up additional compounds requires access to PubChem; unavailable network requests do not remove the bundled library. Optional web fonts have local fallbacks. No application backend is required. Optional local language generation needs WebGPU and an explicit model download; see [docs/DIALOGUE.md](docs/DIALOGUE.md).
 
