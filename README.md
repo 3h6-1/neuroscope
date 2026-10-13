@@ -2,7 +2,7 @@
 
 **NeuroScope 3.0.0** is an interactive 3D browser program for exploring brain-active molecules, circulation, blood–brain exchange, target interactions, regional activity and a symbolic cognitive workspace. It does **not** implement a complete human brain or predict human consciousness or intelligence. Written in JavaScript with Three.js, it combines sourced molecular structures and cortical surface anatomy with explicitly bounded computational models. Numerical engines run independently of rendering.
 
-[Open the hosted NeuroScope lab](https://neuroscope-lab.adepttuna5.chatgpt.site). The site's existing private audience is preserved; the link does not grant public access.
+[Open NeuroScope](https://3h6-1.github.io/neuroscope/) · [GitHub source](https://github.com/3h6-1/neuroscope)
 
 ## Run locally
 
@@ -20,6 +20,12 @@ Open the localhost URL printed by Vite. Build and preview the static application
 npm run build
 npm run preview
 ```
+
+### Publish at `/neuroscope/`
+
+Run `npm run build:pages` to generate `dist/` with asset and data URLs rooted at `/neuroscope/`. Copy the contents of `dist/` into the `neuroscope/` directory of the `3h6-1.github.io` repository, then commit and push that website repository's `master` branch. Its existing GitHub Pages deployment serves the application at https://3h6-1.github.io/neuroscope/.
+
+The source repository and website repository are separate: pushing source changes alone does not update the deployed copy. The standard `npm run build` still produces a build for a domain root.
 
 Serve `dist/` through an HTTP server. Opening `index.html` with `file://` will not load browser modules and data correctly. The curated catalog, structures, cortical surface, numerical engines and deterministic state inspector are bundled for local use. Looking up additional compounds requires access to PubChem; unavailable network requests do not remove the bundled library. Optional web fonts have local fallbacks. No application backend is required. Optional local language generation needs WebGPU and an explicit model download; see [docs/DIALOGUE.md](docs/DIALOGUE.md).
 
