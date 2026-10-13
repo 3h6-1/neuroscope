@@ -1,0 +1,1235 @@
+{
+  "schemaVersion": 1,
+  "units": "angstrom",
+  "indexing": "zero-based atom IDs; bonds reference IDs",
+  "coordinateNote": "Single computed PubChem 3D conformers; explicit hydrogens. Rigid translation to arithmetic atom centroid only. Not an ensemble, a crystal pose, or a molecular-dynamics trajectory.",
+  "molecules": {
+    "escitalopram": {
+      "name": "Escitalopram\u207a (S-enantiomer)",
+      "formula": "C20H22FN2O+",
+      "charge": 1,
+      "cid": 40466954,
+      "units": "angstrom",
+      "atoms": [
+        {
+          "id": 0,
+          "sourceAtomId": 1,
+          "element": "F",
+          "x": 6.674646,
+          "y": -0.04465,
+          "z": -0.398298,
+          "charge": 0
+        },
+        {
+          "id": 1,
+          "sourceAtomId": 2,
+          "element": "O",
+          "x": 0.849946,
+          "y": -0.05235,
+          "z": 1.752302,
+          "charge": 0
+        },
+        {
+          "id": 2,
+          "sourceAtomId": 3,
+          "element": "N",
+          "x": -2.964654,
+          "y": 2.67435,
+          "z": 0.052802,
+          "charge": 1
+        },
+        {
+          "id": 3,
+          "sourceAtomId": 4,
+          "element": "N",
+          "x": -1.987454,
+          "y": -6.22765,
+          "z": -0.422398,
+          "charge": 0
+        },
+        {
+          "id": 4,
+          "sourceAtomId": 5,
+          "element": "C",
+          "x": 1.099846,
+          "y": -0.16875,
+          "z": 0.315502,
+          "charge": 0
+        },
+        {
+          "id": 5,
+          "sourceAtomId": 6,
+          "element": "C",
+          "x": 0.430246,
+          "y": 1.00615,
+          "z": -0.387698,
+          "charge": 0
+        },
+        {
+          "id": 6,
+          "sourceAtomId": 7,
+          "element": "C",
+          "x": 0.492846,
+          "y": -1.49195,
+          "z": -0.050098,
+          "charge": 0
+        },
+        {
+          "id": 7,
+          "sourceAtomId": 8,
+          "element": "C",
+          "x": -0.976754,
+          "y": 1.24985,
+          "z": 0.152602,
+          "charge": 0
+        },
+        {
+          "id": 8,
+          "sourceAtomId": 9,
+          "element": "C",
+          "x": 2.580046,
+          "y": -0.13585,
+          "z": 0.126102,
+          "charge": 0
+        },
+        {
+          "id": 9,
+          "sourceAtomId": 10,
+          "element": "C",
+          "x": -0.142354,
+          "y": -2.03635,
+          "z": 1.057502,
+          "charge": 0
+        },
+        {
+          "id": 10,
+          "sourceAtomId": 11,
+          "element": "C",
+          "x": -1.621354,
+          "y": 2.44605,
+          "z": -0.531698,
+          "charge": 0
+        },
+        {
+          "id": 11,
+          "sourceAtomId": 12,
+          "element": "C",
+          "x": -0.013754,
+          "y": -1.11835,
+          "z": 2.211802,
+          "charge": 0
+        },
+        {
+          "id": 12,
+          "sourceAtomId": 13,
+          "element": "C",
+          "x": 0.493946,
+          "y": -2.15645,
+          "z": -1.267698,
+          "charge": 0
+        },
+        {
+          "id": 13,
+          "sourceAtomId": 14,
+          "element": "C",
+          "x": -0.791754,
+          "y": -3.25685,
+          "z": 0.988702,
+          "charge": 0
+        },
+        {
+          "id": 14,
+          "sourceAtomId": 15,
+          "element": "C",
+          "x": 3.117646,
+          "y": 0.26365,
+          "z": -1.097398,
+          "charge": 0
+        },
+        {
+          "id": 15,
+          "sourceAtomId": 16,
+          "element": "C",
+          "x": 3.425746,
+          "y": -0.50455,
+          "z": 1.172302,
+          "charge": 0
+        },
+        {
+          "id": 16,
+          "sourceAtomId": 17,
+          "element": "C",
+          "x": -3.658654,
+          "y": 3.87815,
+          "z": -0.536998,
+          "charge": 0
+        },
+        {
+          "id": 17,
+          "sourceAtomId": 18,
+          "element": "C",
+          "x": -3.844754,
+          "y": 1.45005,
+          "z": -0.017098,
+          "charge": 0
+        },
+        {
+          "id": 18,
+          "sourceAtomId": 19,
+          "element": "C",
+          "x": -0.153654,
+          "y": -3.39055,
+          "z": -1.352098,
+          "charge": 0
+        },
+        {
+          "id": 19,
+          "sourceAtomId": 20,
+          "element": "C",
+          "x": -0.792554,
+          "y": -3.93805,
+          "z": -0.229798,
+          "charge": 0
+        },
+        {
+          "id": 20,
+          "sourceAtomId": 21,
+          "element": "C",
+          "x": 4.500746,
+          "y": 0.29435,
+          "z": -1.274898,
+          "charge": 0
+        },
+        {
+          "id": 21,
+          "sourceAtomId": 22,
+          "element": "C",
+          "x": 4.808846,
+          "y": -0.47405,
+          "z": 0.995002,
+          "charge": 0
+        },
+        {
+          "id": 22,
+          "sourceAtomId": 23,
+          "element": "C",
+          "x": 5.346446,
+          "y": -0.07455,
+          "z": -0.228598,
+          "charge": 0
+        },
+        {
+          "id": 23,
+          "sourceAtomId": 24,
+          "element": "C",
+          "x": -1.452054,
+          "y": -5.20165,
+          "z": -0.336098,
+          "charge": 0
+        },
+        {
+          "id": 24,
+          "sourceAtomId": 25,
+          "element": "H",
+          "x": 1.003746,
+          "y": 1.92735,
+          "z": -0.211298,
+          "charge": 0
+        },
+        {
+          "id": 25,
+          "sourceAtomId": 26,
+          "element": "H",
+          "x": 0.376646,
+          "y": 0.86125,
+          "z": -1.474098,
+          "charge": 0
+        },
+        {
+          "id": 26,
+          "sourceAtomId": 27,
+          "element": "H",
+          "x": -1.566054,
+          "y": 0.34575,
+          "z": -0.023698,
+          "charge": 0
+        },
+        {
+          "id": 27,
+          "sourceAtomId": 28,
+          "element": "H",
+          "x": -0.955454,
+          "y": 1.44165,
+          "z": 1.231302,
+          "charge": 0
+        },
+        {
+          "id": 28,
+          "sourceAtomId": 29,
+          "element": "H",
+          "x": -1.033454,
+          "y": 3.35595,
+          "z": -0.368398,
+          "charge": 0
+        },
+        {
+          "id": 29,
+          "sourceAtomId": 30,
+          "element": "H",
+          "x": -1.740354,
+          "y": 2.28065,
+          "z": -1.608498,
+          "charge": 0
+        },
+        {
+          "id": 30,
+          "sourceAtomId": 31,
+          "element": "H",
+          "x": -0.976854,
+          "y": -0.69135,
+          "z": 2.504902,
+          "charge": 0
+        },
+        {
+          "id": 31,
+          "sourceAtomId": 32,
+          "element": "H",
+          "x": 0.463346,
+          "y": -1.60005,
+          "z": 3.069602,
+          "charge": 0
+        },
+        {
+          "id": 32,
+          "sourceAtomId": 33,
+          "element": "H",
+          "x": -2.835154,
+          "y": 2.88645,
+          "z": 1.051502,
+          "charge": 0
+        },
+        {
+          "id": 33,
+          "sourceAtomId": 34,
+          "element": "H",
+          "x": 0.980746,
+          "y": -1.73585,
+          "z": -2.140798,
+          "charge": 0
+        },
+        {
+          "id": 34,
+          "sourceAtomId": 35,
+          "element": "H",
+          "x": -1.286554,
+          "y": -3.66445,
+          "z": 1.865302,
+          "charge": 0
+        },
+        {
+          "id": 35,
+          "sourceAtomId": 36,
+          "element": "H",
+          "x": 2.494346,
+          "y": 0.53895,
+          "z": -1.942198,
+          "charge": 0
+        },
+        {
+          "id": 36,
+          "sourceAtomId": 37,
+          "element": "H",
+          "x": 3.048746,
+          "y": -0.83775,
+          "z": 2.134802,
+          "charge": 0
+        },
+        {
+          "id": 37,
+          "sourceAtomId": 38,
+          "element": "H",
+          "x": -4.587254,
+          "y": 4.04035,
+          "z": 0.016502,
+          "charge": 0
+        },
+        {
+          "id": 38,
+          "sourceAtomId": 39,
+          "element": "H",
+          "x": -3.857254,
+          "y": 3.68015,
+          "z": -1.593598,
+          "charge": 0
+        },
+        {
+          "id": 39,
+          "sourceAtomId": 40,
+          "element": "H",
+          "x": -2.998454,
+          "y": 4.74085,
+          "z": -0.415898,
+          "charge": 0
+        },
+        {
+          "id": 40,
+          "sourceAtomId": 41,
+          "element": "H",
+          "x": -3.815954,
+          "y": 1.04995,
+          "z": -1.034198,
+          "charge": 0
+        },
+        {
+          "id": 41,
+          "sourceAtomId": 42,
+          "element": "H",
+          "x": -4.864054,
+          "y": 1.74915,
+          "z": 0.244602,
+          "charge": 0
+        },
+        {
+          "id": 42,
+          "sourceAtomId": 43,
+          "element": "H",
+          "x": -3.503154,
+          "y": 0.72385,
+          "z": 0.723902,
+          "charge": 0
+        },
+        {
+          "id": 43,
+          "sourceAtomId": 44,
+          "element": "H",
+          "x": -0.156754,
+          "y": -3.91945,
+          "z": -2.302798,
+          "charge": 0
+        },
+        {
+          "id": 44,
+          "sourceAtomId": 45,
+          "element": "H",
+          "x": 4.920046,
+          "y": 0.60105,
+          "z": -2.228598,
+          "charge": 0
+        },
+        {
+          "id": 45,
+          "sourceAtomId": 46,
+          "element": "H",
+          "x": 5.467946,
+          "y": -0.76445,
+          "z": 1.807902,
+          "charge": 0
+        }
+      ],
+      "bonds": [
+        {
+          "a": 0,
+          "b": 22,
+          "order": 1
+        },
+        {
+          "a": 1,
+          "b": 4,
+          "order": 1
+        },
+        {
+          "a": 1,
+          "b": 11,
+          "order": 1
+        },
+        {
+          "a": 2,
+          "b": 10,
+          "order": 1
+        },
+        {
+          "a": 2,
+          "b": 16,
+          "order": 1
+        },
+        {
+          "a": 2,
+          "b": 17,
+          "order": 1
+        },
+        {
+          "a": 2,
+          "b": 32,
+          "order": 1
+        },
+        {
+          "a": 3,
+          "b": 23,
+          "order": 3
+        },
+        {
+          "a": 4,
+          "b": 5,
+          "order": 1
+        },
+        {
+          "a": 4,
+          "b": 6,
+          "order": 1
+        },
+        {
+          "a": 4,
+          "b": 8,
+          "order": 1
+        },
+        {
+          "a": 5,
+          "b": 7,
+          "order": 1
+        },
+        {
+          "a": 5,
+          "b": 24,
+          "order": 1
+        },
+        {
+          "a": 5,
+          "b": 25,
+          "order": 1
+        },
+        {
+          "a": 6,
+          "b": 9,
+          "order": 2
+        },
+        {
+          "a": 6,
+          "b": 12,
+          "order": 1
+        },
+        {
+          "a": 7,
+          "b": 10,
+          "order": 1
+        },
+        {
+          "a": 7,
+          "b": 26,
+          "order": 1
+        },
+        {
+          "a": 7,
+          "b": 27,
+          "order": 1
+        },
+        {
+          "a": 8,
+          "b": 14,
+          "order": 2
+        },
+        {
+          "a": 8,
+          "b": 15,
+          "order": 1
+        },
+        {
+          "a": 9,
+          "b": 11,
+          "order": 1
+        },
+        {
+          "a": 9,
+          "b": 13,
+          "order": 1
+        },
+        {
+          "a": 10,
+          "b": 28,
+          "order": 1
+        },
+        {
+          "a": 10,
+          "b": 29,
+          "order": 1
+        },
+        {
+          "a": 11,
+          "b": 30,
+          "order": 1
+        },
+        {
+          "a": 11,
+          "b": 31,
+          "order": 1
+        },
+        {
+          "a": 12,
+          "b": 18,
+          "order": 2
+        },
+        {
+          "a": 12,
+          "b": 33,
+          "order": 1
+        },
+        {
+          "a": 13,
+          "b": 19,
+          "order": 2
+        },
+        {
+          "a": 13,
+          "b": 34,
+          "order": 1
+        },
+        {
+          "a": 14,
+          "b": 20,
+          "order": 1
+        },
+        {
+          "a": 14,
+          "b": 35,
+          "order": 1
+        },
+        {
+          "a": 15,
+          "b": 21,
+          "order": 2
+        },
+        {
+          "a": 15,
+          "b": 36,
+          "order": 1
+        },
+        {
+          "a": 16,
+          "b": 37,
+          "order": 1
+        },
+        {
+          "a": 16,
+          "b": 38,
+          "order": 1
+        },
+        {
+          "a": 16,
+          "b": 39,
+          "order": 1
+        },
+        {
+          "a": 17,
+          "b": 40,
+          "order": 1
+        },
+        {
+          "a": 17,
+          "b": 41,
+          "order": 1
+        },
+        {
+          "a": 17,
+          "b": 42,
+          "order": 1
+        },
+        {
+          "a": 18,
+          "b": 19,
+          "order": 1
+        },
+        {
+          "a": 18,
+          "b": 43,
+          "order": 1
+        },
+        {
+          "a": 19,
+          "b": 23,
+          "order": 1
+        },
+        {
+          "a": 20,
+          "b": 22,
+          "order": 2
+        },
+        {
+          "a": 20,
+          "b": 44,
+          "order": 1
+        },
+        {
+          "a": 21,
+          "b": 22,
+          "order": 1
+        },
+        {
+          "a": 21,
+          "b": 45,
+          "order": 1
+        }
+      ],
+      "stereochemistry": {
+        "centers": [
+          {
+            "atomId": 4,
+            "configuration": "S",
+            "neighborsCipPriority": [
+              1,
+              6,
+              8,
+              5
+            ],
+            "signedTripleProduct": 10.228633194,
+            "tripleProductDefinition": "det([r(priority1)-r(priority4), r(priority2)-r(priority4), r(priority3)-r(priority4)])",
+            "expectedSign": 1
+          }
+        ],
+        "verification": "RDKit 2025.09.2 assigned stereochemistry from SDF 3D coordinates with replaceExistingTags=True; no embedding or minimization performed.",
+        "isomericSmilesFrom3D": "C[NH+](C)CCC[C@@]1(c2ccc(F)cc2)OCc2cc(C#N)ccc21"
+      },
+      "provenance": {
+        "provider": "PubChem / NCBI",
+        "url": "https://pubchem.ncbi.nlm.nih.gov/compound/40466954",
+        "downloadUrl": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/40466954/record/JSON?record_type=3d",
+        "sdfDownloadUrl": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/40466954/SDF?record_type=3d",
+        "retrieved": "2026-10-12",
+        "sourceSha256": "5991a64e2e84413dd3924af8b68f58f62a5260bb096e5eb839a5800a649857f1",
+        "sourceSdfSha256": "a728599d40a17fecf190c4ca229307b55c480aa72b65fdcb329c689a18b6302c",
+        "coordinateType": "computed 3D conformer",
+        "conformerId": "02697A0A00000001",
+        "sourceConformerEnergy": {
+          "fval": 70.1997
+        },
+        "energyNote": "PubChem supplied MMFF94 NoEstat conformer energy; not a solvent free energy or binding affinity.",
+        "sourceCoordinateTranslation": [
+          0.6425456521739131,
+          -0.70875,
+          0.028902173913043484
+        ]
+      },
+      "notes": "Protonated tertiary amine, S stereocenter. The drug moiety binds SERT. Molecular coordinates are distinct from the bound 68P crystal pose in sert.json."
+    },
+    "serotonin": {
+      "name": "Serotonin\u207a (5-hydroxytryptammonium)",
+      "formula": "C10H13N2O+",
+      "charge": 1,
+      "cid": 4048638,
+      "units": "angstrom",
+      "atoms": [
+        {
+          "id": 0,
+          "sourceAtomId": 1,
+          "element": "O",
+          "x": -3.383292,
+          "y": -2.299738,
+          "z": -0.118631,
+          "charge": 0
+        },
+        {
+          "id": 1,
+          "sourceAtomId": 2,
+          "element": "N",
+          "x": -0.794792,
+          "y": 2.529462,
+          "z": 0.076269,
+          "charge": 0
+        },
+        {
+          "id": 2,
+          "sourceAtomId": 3,
+          "element": "N",
+          "x": 3.600608,
+          "y": -1.392238,
+          "z": 0.202469,
+          "charge": 1
+        },
+        {
+          "id": 3,
+          "sourceAtomId": 4,
+          "element": "C",
+          "x": 0.519108,
+          "y": 0.791062,
+          "z": -0.345831,
+          "charge": 0
+        },
+        {
+          "id": 4,
+          "sourceAtomId": 5,
+          "element": "C",
+          "x": 1.716408,
+          "y": -0.023538,
+          "z": -0.634331,
+          "charge": 0
+        },
+        {
+          "id": 5,
+          "sourceAtomId": 6,
+          "element": "C",
+          "x": -0.813592,
+          "y": 0.315362,
+          "z": -0.195831,
+          "charge": 0
+        },
+        {
+          "id": 6,
+          "sourceAtomId": 7,
+          "element": "C",
+          "x": -1.617992,
+          "y": 1.425962,
+          "z": 0.068269,
+          "charge": 0
+        },
+        {
+          "id": 7,
+          "sourceAtomId": 8,
+          "element": "C",
+          "x": 2.450408,
+          "y": -0.547438,
+          "z": 0.608569,
+          "charge": 0
+        },
+        {
+          "id": 8,
+          "sourceAtomId": 9,
+          "element": "C",
+          "x": 0.498408,
+          "y": 2.155862,
+          "z": -0.173131,
+          "charge": 0
+        },
+        {
+          "id": 9,
+          "sourceAtomId": 10,
+          "element": "C",
+          "x": -1.414692,
+          "y": -0.957538,
+          "z": -0.259631,
+          "charge": 0
+        },
+        {
+          "id": 10,
+          "sourceAtomId": 11,
+          "element": "C",
+          "x": -2.998792,
+          "y": 1.327062,
+          "z": 0.272769,
+          "charge": 0
+        },
+        {
+          "id": 11,
+          "sourceAtomId": 12,
+          "element": "C",
+          "x": -2.794892,
+          "y": -1.071738,
+          "z": -0.057231,
+          "charge": 0
+        },
+        {
+          "id": 12,
+          "sourceAtomId": 13,
+          "element": "C",
+          "x": -3.572792,
+          "y": 0.054362,
+          "z": 0.204769,
+          "charge": 0
+        },
+        {
+          "id": 13,
+          "sourceAtomId": 14,
+          "element": "H",
+          "x": 1.433908,
+          "y": -0.873238,
+          "z": -1.269731,
+          "charge": 0
+        },
+        {
+          "id": 14,
+          "sourceAtomId": 15,
+          "element": "H",
+          "x": 2.418708,
+          "y": 0.568962,
+          "z": -1.236331,
+          "charge": 0
+        },
+        {
+          "id": 15,
+          "sourceAtomId": 16,
+          "element": "H",
+          "x": 1.801208,
+          "y": -1.172838,
+          "z": 1.229269,
+          "charge": 0
+        },
+        {
+          "id": 16,
+          "sourceAtomId": 17,
+          "element": "H",
+          "x": 2.851908,
+          "y": 0.269262,
+          "z": 1.216669,
+          "charge": 0
+        },
+        {
+          "id": 17,
+          "sourceAtomId": 18,
+          "element": "H",
+          "x": 1.286408,
+          "y": 2.895562,
+          "z": -0.204131,
+          "charge": 0
+        },
+        {
+          "id": 18,
+          "sourceAtomId": 19,
+          "element": "H",
+          "x": -1.101692,
+          "y": 3.477962,
+          "z": 0.242469,
+          "charge": 0
+        },
+        {
+          "id": 19,
+          "sourceAtomId": 20,
+          "element": "H",
+          "x": -0.811092,
+          "y": -1.838038,
+          "z": -0.462431,
+          "charge": 0
+        },
+        {
+          "id": 20,
+          "sourceAtomId": 21,
+          "element": "H",
+          "x": -3.605292,
+          "y": 2.203062,
+          "z": 0.476769,
+          "charge": 0
+        },
+        {
+          "id": 21,
+          "sourceAtomId": 22,
+          "element": "H",
+          "x": 4.105408,
+          "y": -1.750638,
+          "z": 1.023869,
+          "charge": 0
+        },
+        {
+          "id": 22,
+          "sourceAtomId": 23,
+          "element": "H",
+          "x": 4.275608,
+          "y": -0.864038,
+          "z": -0.366331,
+          "charge": 0
+        },
+        {
+          "id": 23,
+          "sourceAtomId": 24,
+          "element": "H",
+          "x": 3.296708,
+          "y": -2.205238,
+          "z": -0.349731,
+          "charge": 0
+        },
+        {
+          "id": 24,
+          "sourceAtomId": 25,
+          "element": "H",
+          "x": -4.644192,
+          "y": -0.050638,
+          "z": 0.359669,
+          "charge": 0
+        },
+        {
+          "id": 25,
+          "sourceAtomId": 26,
+          "element": "H",
+          "x": -2.701692,
+          "y": -2.967038,
+          "z": -0.308531,
+          "charge": 0
+        }
+      ],
+      "bonds": [
+        {
+          "a": 0,
+          "b": 11,
+          "order": 1
+        },
+        {
+          "a": 0,
+          "b": 25,
+          "order": 1
+        },
+        {
+          "a": 1,
+          "b": 6,
+          "order": 1
+        },
+        {
+          "a": 1,
+          "b": 8,
+          "order": 1
+        },
+        {
+          "a": 1,
+          "b": 18,
+          "order": 1
+        },
+        {
+          "a": 2,
+          "b": 7,
+          "order": 1
+        },
+        {
+          "a": 2,
+          "b": 21,
+          "order": 1
+        },
+        {
+          "a": 2,
+          "b": 22,
+          "order": 1
+        },
+        {
+          "a": 2,
+          "b": 23,
+          "order": 1
+        },
+        {
+          "a": 3,
+          "b": 4,
+          "order": 1
+        },
+        {
+          "a": 3,
+          "b": 5,
+          "order": 1
+        },
+        {
+          "a": 3,
+          "b": 8,
+          "order": 2
+        },
+        {
+          "a": 4,
+          "b": 7,
+          "order": 1
+        },
+        {
+          "a": 4,
+          "b": 13,
+          "order": 1
+        },
+        {
+          "a": 4,
+          "b": 14,
+          "order": 1
+        },
+        {
+          "a": 5,
+          "b": 6,
+          "order": 2
+        },
+        {
+          "a": 5,
+          "b": 9,
+          "order": 1
+        },
+        {
+          "a": 6,
+          "b": 10,
+          "order": 1
+        },
+        {
+          "a": 7,
+          "b": 15,
+          "order": 1
+        },
+        {
+          "a": 7,
+          "b": 16,
+          "order": 1
+        },
+        {
+          "a": 8,
+          "b": 17,
+          "order": 1
+        },
+        {
+          "a": 9,
+          "b": 11,
+          "order": 2
+        },
+        {
+          "a": 9,
+          "b": 19,
+          "order": 1
+        },
+        {
+          "a": 10,
+          "b": 12,
+          "order": 2
+        },
+        {
+          "a": 10,
+          "b": 20,
+          "order": 1
+        },
+        {
+          "a": 11,
+          "b": 12,
+          "order": 1
+        },
+        {
+          "a": 12,
+          "b": 24,
+          "order": 1
+        }
+      ],
+      "stereochemistry": {
+        "centers": [],
+        "verification": "RDKit 2025.09.2 assigned stereochemistry from SDF 3D coordinates with replaceExistingTags=True; no embedding or minimization performed.",
+        "isomericSmilesFrom3D": "[NH3+]CCc1c[nH]c2ccc(O)cc12"
+      },
+      "provenance": {
+        "provider": "PubChem / NCBI",
+        "url": "https://pubchem.ncbi.nlm.nih.gov/compound/4048638",
+        "downloadUrl": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/4048638/record/JSON?record_type=3d",
+        "sdfDownloadUrl": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/4048638/SDF?record_type=3d",
+        "retrieved": "2026-10-12",
+        "sourceSha256": "219c60ca8d411b877abc56a9bef732c7f9d6ccdc0a5c928e7e5c9968b2f3b56c",
+        "sourceSdfSha256": "b5f42349b63d44d83188e6726171c7f4d8e828b23b36b7922f642241fca9b36a",
+        "coordinateType": "computed 3D conformer",
+        "conformerId": "003DC6FE00000002",
+        "sourceConformerEnergy": {
+          "fval": 19.1105
+        },
+        "energyNote": "PubChem supplied MMFF94 NoEstat conformer energy; not a solvent free energy or binding affinity.",
+        "sourceCoordinateTranslation": [
+          -0.6619923076923077,
+          0.1774615384615385,
+          -0.027030769230769247
+        ]
+      },
+      "notes": "Protonated side-chain primary amine. Indole nitrogen and phenolic hydroxyl retain their hydrogens."
+    },
+    "oxalate": {
+      "name": "Oxalate\u00b2\u207b",
+      "formula": "C2O4-2",
+      "charge": -2,
+      "cid": 71081,
+      "units": "angstrom",
+      "atoms": [
+        {
+          "id": 0,
+          "sourceAtomId": 1,
+          "element": "O",
+          "x": 1.231583,
+          "y": 1.153583,
+          "z": 0.0003,
+          "charge": -1
+        },
+        {
+          "id": 1,
+          "sourceAtomId": 2,
+          "element": "O",
+          "x": -1.231817,
+          "y": -1.153617,
+          "z": 0.0003,
+          "charge": -1
+        },
+        {
+          "id": 2,
+          "sourceAtomId": 3,
+          "element": "O",
+          "x": 1.231783,
+          "y": -1.153517,
+          "z": -0.0002,
+          "charge": 0
+        },
+        {
+          "id": 3,
+          "sourceAtomId": 4,
+          "element": "O",
+          "x": -1.231617,
+          "y": 1.153583,
+          "z": -0.0003,
+          "charge": 0
+        },
+        {
+          "id": 4,
+          "sourceAtomId": 5,
+          "element": "C",
+          "x": 0.726683,
+          "y": -1.7e-05,
+          "z": -0.0002,
+          "charge": 0
+        },
+        {
+          "id": 5,
+          "sourceAtomId": 6,
+          "element": "C",
+          "x": -0.726617,
+          "y": -1.7e-05,
+          "z": 0.0001,
+          "charge": 0
+        }
+      ],
+      "bonds": [
+        {
+          "a": 0,
+          "b": 4,
+          "order": 1
+        },
+        {
+          "a": 1,
+          "b": 5,
+          "order": 1
+        },
+        {
+          "a": 2,
+          "b": 4,
+          "order": 2
+        },
+        {
+          "a": 3,
+          "b": 5,
+          "order": 2
+        },
+        {
+          "a": 4,
+          "b": 5,
+          "order": 1
+        }
+      ],
+      "stereochemistry": {
+        "centers": [],
+        "verification": "RDKit 2025.09.2 assigned stereochemistry from SDF 3D coordinates with replaceExistingTags=True; no embedding or minimization performed.",
+        "isomericSmilesFrom3D": "O=C([O-])C(=O)[O-]"
+      },
+      "provenance": {
+        "provider": "PubChem / NCBI",
+        "url": "https://pubchem.ncbi.nlm.nih.gov/compound/71081",
+        "downloadUrl": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/71081/record/JSON?record_type=3d",
+        "sdfDownloadUrl": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/71081/SDF?record_type=3d",
+        "retrieved": "2026-10-12",
+        "sourceSha256": "9a595ca35f6bae7fd09c3103abb950001fa0687427de58e5101047feca1cd70c",
+        "sourceSdfSha256": "81ecde11dd96887051844e23f94dc4a3defe993bf0b1657cedaaa611292bd1c7",
+        "coordinateType": "computed 3D conformer",
+        "conformerId": "000115A900000001",
+        "sourceConformerEnergy": {
+          "fval": 11.7121
+        },
+        "energyNote": "PubChem supplied MMFF94 NoEstat conformer energy; not a solvent free energy or binding affinity.",
+        "sourceCoordinateTranslation": [
+          -1.666666666666483e-05,
+          -1.666666666666483e-05,
+          2.2587545260114674e-21
+        ]
+      },
+      "notes": "Dianion shown only as a formulation/background molecule. It is not a covalently attached part of escitalopram and is not a SERT inhibitor in this model. Formal single/double bonds are a resonance representation."
+    }
+  }
+}

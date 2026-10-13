@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "title": "Scientific model and provenance",
+  "retrieved": "2026-10-12",
+  "scope": "An educational well-mixed stochastic reaction model with sampled Brownian positions in a representative serotonergic contact. Molecular geometry is sourced; whole-neuron anatomy and transport-cycle motion are illustrative. It is not atomistic molecular dynamics or a prediction of individual treatment response.",
+  "notes": [
+    {
+      "id": "drug",
+      "title": "What escitalopram does",
+      "text": "Escitalopram binds the central substrate site of SERT and stabilizes an outward-open conformation, reducing serotonin reuptake. It does not plug a serotonin receptor, manufacture serotonin, or covalently bind the transporter.",
+      "sources": [
+        "coleman-2016"
+      ]
+    },
+    {
+      "id": "molecules",
+      "title": "Real structures, explicit protonation",
+      "text": "Molecule views use PubChem computed 3D conformers with all hydrogens: escitalopram⁺ (C20H22FN2O⁺) and serotonin⁺ (C10H13N2O⁺). They are single conformers, not fixed shapes of flexible molecules in water. Escitalopram’s S configuration was independently checked from coordinates.",
+      "sources": [
+        "pubchem-escitalopram",
+        "pubchem-serotonin"
+      ]
+    },
+    {
+      "id": "sert",
+      "title": "An experimental SERT snapshot",
+      "text": "The SERT detail uses chain A of PDB 5I71, a 3.15 Å X-ray structure of an engineered thermostabilized construct. The trace contains 542 Cα positions plus the actual bound escitalopram heavy-atom pose. Cartoon gate motion is schematic.",
+      "sources": [
+        "sert-5i71"
+      ]
+    },
+    {
+      "id": "sampling",
+      "title": "What the moving particles mean",
+      "text": "Binding follows exact Gillespie well-mixed kinetics. Reflected Brownian positions are sampled every 0.01 s; sub-microsecond crossings between samples are unresolved. Visual paths are explanatory, and binding is based on pooled concentration, not on rendered collisions.",
+      "sources": []
+    },
+    {
+      "id": "concentration",
+      "title": "A local burst in a tiny volume",
+      "text": "The model box is 200 × 20 × 130 nm. One explicit serotonin molecule corresponds to 3.193344 µM in that volume; 120 initial molecules represent about 383 µM locally. This is not a bulk brain concentration. Free escitalopram is a separate nM reservoir.",
+      "sources": []
+    },
+    {
+      "id": "transport",
+      "title": "Transport is coupled to ions",
+      "text": "SERT uptake depends on sodium and chloride gradients maintained by cellular metabolism. A transporter is an alternating-access carrier, not a permanently open pore. The reduced model assumes maintained ion gradients and does not integrate membrane voltage or individual transport ions.",
+      "sources": [
+        "coleman-2016"
+      ]
+    },
+    {
+      "id": "signaling",
+      "title": "Serotonin changes receptor signaling",
+      "text": "Receptor activation is shown as occupancy, not a guaranteed postsynaptic action potential. Effects depend on receptor subtype and cell context. Released serotonin may diffuse beyond a single contact; a narrow synaptic cleft is a teaching geometry, not the anatomy of every serotonergic release site.",
+      "sources": [
+        "bunin-1998"
+      ]
+    },
+    {
+      "id": "salt",
+      "title": "The medicine’s salt is not the binding ligand",
+      "text": "Escitalopram is supplied as an oxalate salt. In solution, acid–base equilibria and dissociation apply; oxalate is not covalently attached to the drug. The optional oxalate structure is background chemistry and is not co-delivered as a simulated SERT-blocking species.",
+      "sources": [
+        "lexapro-label",
+        "harrison-2007"
+      ]
+    },
+    {
+      "id": "long-term",
+      "title": "Seconds and weeks are different models",
+      "text": "Synaptic diffusion and receptor occupancy cannot by themselves predict clinical benefit. A roughly 27–32 hour terminal half-life supports a separate day-scale pharmacokinetic illustration; plasma exposure is not the same quantity as free drug concentration at a synapse.",
+      "sources": [
+        "lexapro-label"
+      ]
+    },
+    {
+      "id": "allosteric",
+      "title": "Beyond the central binding site",
+      "text": "An extracellular allosteric escitalopram site has also been observed experimentally. The reduced central-site occupancy model does not attempt to infer the clinical contribution of that site.",
+      "sources": [
+        "coleman-2016"
+      ]
+    }
+  ],
+  "equations": [
+    {
+      "name": "Overdamped Brownian diffusion",
+      "expression": "Δxᵢ = √(2DΔt) ξᵢ, ξᵢ ~ N(0,1); ⟨|Δr|²⟩ = 6DΔt",
+      "note": "Three independent Gaussian increments per step. D must match the length and time units. Water collisions are integrated out; ballistic Newtonian trajectories would be inappropriate at this coarse scale."
+    },
+    {
+      "name": "First-order reaction probability",
+      "expression": "P(event during Δt) = 1 − exp(−kΔt)",
+      "note": "k is a hazard in inverse time. Several mutually exclusive events require a combined hazard and conditional event choice, or an explicitly justified operator split."
+    },
+    {
+      "name": "Drug occupancy",
+      "expression": "dθ/dt = kon[I](1−θ) − koffθ; θeq = [I]/([I]+Kd); Kd = koff/kon",
+      "note": "Applies to a simple reversible site under a fixed free-ligand reservoir. It does not mean that changing the total displayed particle count changes a calibrated tissue concentration."
+    },
+    {
+      "name": "Competitive inhibition reference",
+      "expression": "v = Vmax[S] / (Km(1 + [I]/Ki) + [S])",
+      "note": "A reduced steady-state comparison under classical competitive assumptions, not a full SERT alternating-access and allosteric mechanism."
+    },
+    {
+      "name": "Absorption and elimination",
+      "expression": "C(t) = F·Dose·ka / (V(ka−ke)) · (exp(−ke·t)−exp(−ka·t)); ke = ln(2)/t½",
+      "note": "For a single dose with ka≠ke in a one-compartment model. Repeated doses require summing shifted terms; this model does not describe brain concentration or clinical onset."
+    },
+    {
+      "name": "Tetrahedral handedness audit",
+      "expression": "χ = (r₁−r₄) · ((r₂−r₄) × (r₃−r₄))",
+      "note": "The four neighbor positions must first be ordered by CIP priority. The sign is a coordinate integrity check; a determinant with arbitrary atom order does not by itself establish R/S."
+    }
+  ],
+  "limitations": [
+    "Molecular display scale is enlarged relative to tissue; do not compare molecule radii and neuron diameters in the overview.",
+    "Soma, axon, dendrites, organelles and membranes are procedural teaching geometry, not a traced biological specimen.",
+    "No explicit solvent, electrostatic field, atomic force field, membrane potential, protein free-energy landscape, receptor second-messenger network, or complete neuronal circuit is integrated.",
+    "Binding rates, capture radii and receptor populations are configurable educational model parameters, not a fit to a human patient or dose.",
+    "SERT has more states and allosteric effects than the simplified inhibition model. A static experimental pose does not determine the transport pathway.",
+    "Statistical and numerical tests validate the implemented equations, conservation and molecular assets; they do not establish clinical predictive validity."
+  ],
+  "sources": [
+    {
+      "id": "pubchem-escitalopram",
+      "title": "PubChem: escitalopram(1+), CID 40466954",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/compound/40466954",
+      "type": "Molecular structure database"
+    },
+    {
+      "id": "pubchem-serotonin",
+      "title": "PubChem: serotonin(1+), CID 4048638",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/compound/4048638",
+      "type": "Molecular structure database"
+    },
+    {
+      "id": "pubchem-oxalate",
+      "title": "PubChem: oxalate, CID 71081",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/compound/71081",
+      "type": "Molecular structure database"
+    },
+    {
+      "id": "sert-5i71",
+      "title": "RCSB PDB 5I71: SERT with central-site escitalopram",
+      "url": "https://www.rcsb.org/structure/5I71",
+      "type": "Experimental coordinates"
+    },
+    {
+      "id": "coleman-2016",
+      "title": "Coleman, Green & Gouaux (2016): X-ray structures and mechanism of human SERT",
+      "url": "https://doi.org/10.1038/nature17629",
+      "type": "Primary structural research"
+    },
+    {
+      "id": "bunin-1998",
+      "title": "Bunin & Wightman (1998): serotonin release, uptake and extrasynaptic transmission",
+      "url": "https://doi.org/10.1523/JNEUROSCI.18-13-04854.1998",
+      "type": "Primary experimental research"
+    },
+    {
+      "id": "lexapro-label",
+      "title": "DailyMed: Lexapro prescribing information, pharmacology and pharmacokinetics",
+      "url": "https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=13bb8267-1cab-43e5-acae-55a4d957630a",
+      "type": "Approved product labeling"
+    },
+    {
+      "id": "harrison-2007",
+      "title": "Harrison et al. (2007): crystal structure of escitalopram oxalate",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/17348096/",
+      "type": "Primary crystallography research"
+    }
+  ],
+  "model": {
+    "kinetics": "Gillespie direct method for well-mixed reactions",
+    "spatial": "Reflected free Brownian endpoint samples; no collision-triggered binding",
+    "timeUnit": "s",
+    "positionUnit": "nm",
+    "presentationStepSeconds": 0.01,
+    "cleftDimensionsNm": [
+      200,
+      20,
+      130
+    ],
+    "volumeLiters": 5.2e-19,
+    "micromolarPerSerotonin": 3.19334435995,
+    "diffusionCoefficientNm2PerSecond": 400000000,
+    "allKineticRatesIllustrative": true,
+    "initialSerotonin": 120,
+    "drugConcentrationNanomolar": 30,
+    "drugKonNanomolarInverseSeconds": 0.08,
+    "drugKoffSecondsInverse": 0.08,
+    "drugKdNanomolar": 1,
+    "defaultTransporterCount": 14,
+    "defaultReceptorCount": 12,
+    "membraneBoundary": "reflecting on all six faces; extracellular clearance is a separate lumped sink"
+  }
+}

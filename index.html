@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="theme-color" content="#0b1418"/><meta name="description" content="Explore serotonin signaling and escitalopram inhibition in an interactive, sourced 3D synapse simulation."/><title>Synapse — Escitalopram Lab</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"/></head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Synapse Lab home"><span class="brand-symbol">⌘</span><span>SYNAPSE<span class="brand-light"> / LAB</span></span></a>
+    <nav aria-label="Resources"><button class="nav active" id="explore-nav">Explore</button><button class="nav" data-dialog="model">The model <span>↗</span></button><button class="nav" data-dialog="sources">Sources <span>↗</span></button></nav>
+    <span class="model-badge"><i></i> RESEARCH-INFORMED · EDUCATIONAL</span>
+  </header>
+  <aside class="sidebar">
+    <div class="side-heading"><span class="eyebrow">MOLECULAR NEUROSCIENCE / 01</span><h1>A closer look <br>at serotonin.</h1><p>Explore how escitalopram changes signaling at the synapse.</p></div>
+    <section class="control-section"><div class="section-title"><span>01</span> Perspective</div>
+      <div class="view-switch" role="group" aria-label="Scene perspective"><button data-view="synapse" class="selected"><span>◉</span> Synapse</button><button data-view="neuron"><span>⌁</span> Neurons</button><button data-view="molecule"><span>⬡</span> Molecules</button></div>
+    </section>
+    <section class="control-section"><div class="section-title"><span>02</span> Experiment</div>
+      <div class="scenario-switch" role="group" aria-label="Experiment condition"><button id="baseline-btn">Baseline</button><button id="drug-btn" class="selected">With escitalopram</button></div>
+      <label class="slider-label" for="dose"><span>Free escitalopram</span><output id="dose-value">30 <small>nM</small></output></label>
+      <input id="dose" type="range" min="0" max="100" step="1" value="30"/><div class="range-labels"><span>0 nM</span><span>100 nM</span></div>
+      <p class="field-note">Local reservoir concentration, not a medication dose.</p>
+      <button id="release-btn" class="release-btn"><span>＋</span> Release serotonin <span class="key">R</span></button>
+      <div class="check-row"><label><input id="auto-release" type="checkbox" checked/> Continuous release</label><label><input id="labels" type="checkbox" checked/> Labels</label></div>
+    </section>
+    <section class="control-section live-section"><div class="section-title"><span>03</span> Live activity <i class="live-dot"></i></div>
+      <div class="metric"><div><i class="dot mint"></i><span>SERT occupied by drug</span></div><strong id="occupancy">0<small>%</small></strong></div><div class="meter"><span id="occupancy-meter"></span></div>
+      <div class="metrics-grid"><div><span>Free serotonin</span><strong id="serotonin-count">120</strong><small>molecules</small></div><div><span>Reuptake events</span><strong id="reuptake-count">0</strong><small>cumulative</small></div></div>
+      <div class="chart-title"><span>Serotonin in the cleft</span><span class="amber-text">● 5-HT</span></div><canvas id="chart" aria-label="Live chart of free serotonin over simulation time" role="img"></canvas><div class="chart-axis"><span>past 30 seconds</span><span>now</span></div>
+      <div class="receptor-stat"><span>Postsynaptic receptors bound</span><strong id="receptor-stat">0 / 12</strong></div>
+    </section>
+    <button class="model-link" data-dialog="model"><span>ⓘ</span> What this model can tell you <span>↗</span></button>
+  </aside>
+  <main id="stage">
+    <div id="canvas-wrap"><div id="loading">Building your synapse…<small>Loading molecular coordinates</small></div></div>
+    <div class="stage-heading"><span class="eyebrow" id="scene-eyebrow">THE SYNAPTIC CLEFT</span><h2 id="scene-title">A small space. A lasting signal.</h2><p id="scene-description">Serotonin diffuses between two neurons. Follow the molecules.</p></div>
+    <div class="stage-tools"><button id="camera-reset" title="Reset camera (0)" aria-label="Reset camera">⌖</button><button id="fly-btn" title="Toggle fly navigation (F)" aria-label="Toggle fly navigation">✥</button><button data-dialog="help" title="Navigation help" aria-label="Navigation help">?</button></div>
+    <div class="scene-labels" id="scene-labels"><span data-label="pre">PRESYNAPTIC TERMINAL</span><span data-label="post">POSTSYNAPTIC DENDRITE</span><span data-label="cleft">20 nm · SYNAPTIC CLEFT</span></div>
+    <div class="legend"><span><i class="dot amber"></i> Serotonin (5-HT)</span><span><i class="dot mint"></i> Escitalopram</span><span><i class="dot lavender"></i> SERT transporter</span></div>
+    <div class="view-note"><span id="scale-note">20 nm cleft · molecular glyphs enlarged</span><span id="camera-note">DRAG TO ORBIT · SCROLL TO ZOOM</span></div>
+    <div id="molecule-controls" hidden><div class="mol-switch"><button data-molecule="escitalopram" class="selected">Escitalopram</button><button data-molecule="serotonin">Serotonin</button><button data-molecule="sert">SERT · 5I71</button></div><label><input type="checkbox" id="hydrogens" checked/> Show hydrogen atoms</label><label><input type="checkbox" id="spin" checked/> Rotate structure</label></div>
+    <aside class="inspector" id="inspector"><div class="inspector-top"><span class="eyebrow" id="inspector-type">THE MECHANISM</span><button id="inspector-close" aria-label="Collapse inspector">−</button></div><div id="inspector-body"><h3 id="inspector-title">A transporter, interrupted.</h3><p id="inspector-text">Escitalopram occupies SERT’s central binding site, reducing serotonin transport back into the presynaptic neuron.</p><div id="inspector-detail"><span class="mini-dot"></span> Select a molecule or protein to inspect</div></div></aside>
+    <div class="status-pill" id="status-pill"><i></i><span>SIMULATION RUNNING</span></div>
+    <footer class="playback">
+      <button id="play-btn" class="play-btn" aria-label="Pause simulation" title="Play / pause (Space)">Ⅱ</button><button id="step-btn" class="icon-btn" aria-label="Advance one simulation step" title="Step 0.1 seconds">▸│</button><button id="reset-btn" class="icon-btn" aria-label="Reset simulation" title="Reset experiment">↺</button>
+      <div class="time-readout"><strong id="time">00:00.00</strong><span>MODEL TIME</span></div>
+      <div class="timeline-wrap"><input id="timeline" type="range" min="0" max="0" step="0.1" value="0" aria-label="Replay recorded simulation"/><div><span id="timeline-label">LIVE RECORDING</span><span id="timeline-end">0.0 s</span></div></div>
+      <label class="speed-label" for="speed">SPEED<select id="speed"><option value="0.1">0.1×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="5">5×</option></select></label>
+    </footer>
+  </main>
+</div>
+<dialog id="info-dialog"><div class="dialog-top"><span class="eyebrow">SYNAPSE / LAB NOTES</span><button id="close-dialog" aria-label="Close dialog">✕</button></div><div id="dialog-content"></div></dialog>
+<div id="toast" role="status"></div>
+<script type="module" src="/src/main.js"></script>
+</body></html>
