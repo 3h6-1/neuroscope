@@ -33,8 +33,18 @@ function evidence(value, sources) {
 const rows = entries => entries.map(([name, html]) => `<tr><th>${e(name)}</th><td>${html}</td></tr>`).join('');
 
 export function modelContent(catalog) {
-  return `<h2>From exposure to spikes: an explicit model.</h2>
-<div class="callout"><p>NeuroScope links virtual plasma exposure, an unbound brain compartment, molecular targets and a small spiking circuit. It is a computational teaching model. Its traces do not predict a person's symptoms, cognition, treatment response or the safety of a drug combination.</p></div>
+  return `<h2>From exposure to regional activity and a workspace.</h2>
+<div class="callout"><p>NeuroScope links virtual plasma exposure, an unbound brain compartment, molecular targets, a spiking circuit, 30 regional population models, and an explicit memory-and-association workspace. It is a computational teaching model. Its traces do not predict a person's symptoms, cognition, treatment response or the safety of a drug combination.</p></div>
+<h3>Anatomy and regional dynamics</h3>
+<p>The cortical surface uses the MRI-derived fsaverage5 reference mesh distributed by Nilearn. Its folds are anatomical geometry. The 30 nonsensory functional nodes and 132 connections are schematic, not registered patient anatomy or a measured connectome. Primary sensory processing is excluded from the dynamics; the intact reference surface still includes those anatomical areas.</p>
+<code>τE dE/dt = −E + σ(10gE E − 8gI I + delayed input + drive + bias + noise − 2.8)<br>τI dI/dt = −I + σ(8gE E − 3I + 0.4 + 0.25drive + bias + 0.7noise − 2.8)<br>σ(x) = 1/(1 + exp(−x))</code>
+<p>Wilson–Cowan-style excitatory/inhibitory populations use τE = 20 ms, τI = 10 ms and a 0.5 ms integration step, with delayed interregional input. Target activity modifies assumed regional gains and biases. The comparison disables direct drug effects while sharing the current cognitive drive and noise: it is not an independent untreated brain.</p>
+<h3>The inspectable workspace</h3>
+<p>Text enters directly as symbols, bypassing modeled senses. Memory retrieval uses lexical similarity, strength and recency. Seeded candidate selection creates associations every two playback seconds. The journal exposes candidate scores, selection probabilities, retained memories and explicit attention, retention, flexibility and inhibition parameters. These are program variables, not measured psychological scores or human thoughts.</p>
+<p>Regional activity changes those parameters through documented, unvalidated mappings. This changes memory selection and internal drive. It does not simulate consciousness, full human reasoning, or a person's subjective drug experience.</p>
+<h3>Conversation is a separate component</h3>
+<p>The default state inspector answers questions about the current model deterministically. An optional WebLLM model supports open-ended language in a browser with WebGPU after an explicit model download. It receives a captured state and conversation context; its language ability does not emerge from these simulated neurons. An assumed sampling temperature of 0.2 + 0.6 × flexibility conditions its output. Response provenance records that input state and sampling rule. Neither language-model internals nor private reasoning are exposed.</p>
+<p>Drug mixtures retain their modeled target competition and PK interactions. Unknown mechanisms, chronic adaptations, metabolites and whole-brain effects are not invented. See the repository's Brain Model and Dialogue documents for the full equations and limits.</p>
 <h3>Amounts, concentrations and exchange</h3>
 <p>Inputs are hypothetical initial <strong>total plasma concentrations in nM</strong>, not medication doses. Plasma amount P and brain unbound-equivalent amount B are in nmol; time is in hours. The default volumes, Vp = 3 L and Vb = 1.4 L, are teaching settings rather than drug-specific distribution volumes.</p>
 <code>Cp = P/Vp; Cf = f · Cp; Cb = B/Vb<br>r = f · Kp,uu · Vb/Vp; q = 1/τ<br>kBP = q/(1+r); kPB = q − kBP<br>dP/dt = −(ke + kPB)P + kBP B<br>dB/dt = kPB P − kBP B</code>
@@ -55,7 +65,7 @@ export function modelContent(catalog) {
 <p>Target activity changes drive hand-chosen current shifts and synaptic gains. This entire mapping is <strong>phenomenological and uncalibrated</strong>, not derived from binding assays or human electrophysiology. Simulated firing has no validated interpretation as mood, subjective intensity, cognition or a clinical effect.</p>
 <p>Playback advances in fixed 0.05-second application ticks. Separate controls map those ticks to PK hours and neural milliseconds; they are not one physical timescale. Rendering and camera motion do not determine either numerical integration step.</p>
 <h3>Geometry and missing kinetics</h3>
-<p>PubChem structures preserve sourced coordinates and connectivity; computed conformers are not measured solution ensembles or receptor-bound poses. Anatomical meshes, vessels and neuron shapes are schematic. The BBB scene is a separate magnified scale. Circulating tracer counts and trajectories are illustrative and do not compute drug amounts.</p>
+<p>PubChem structures preserve sourced coordinates and connectivity; computed conformers are not measured solution ensembles or receptor-bound poses. The brain cortex is MRI-derived; other anatomical meshes, vessels, neuron shapes, regional positions and functional connections are schematic. The BBB scene is a separate magnified scale. Circulating tracer counts and trajectories are illustrative and do not compute drug amounts.</p>
 <p>Cyanocobalamin follows a qualitative carrier, cellular uptake and cofactor pathway. Entered plasma exposure is an unevolved annotation; brain concentration and kinetics remain unknown. Its available 2D drawing is never presented as a physical 3D cobalt structure.</p>
 ${array(catalog?.modelAssumptions).length ? `<h3>Catalog assumptions</h3><ul>${catalog.modelAssumptions.map(x => `<li>${e(x)}</li>`).join('')}</ul>` : ''}
 <p>Tests establish software consistency: identity, coordinate integrity, equations, conservation and replay. They do not calibrate an entire brain. An interaction missing from this model is unrepresented, not established to be absent in biology.</p>`;
@@ -66,6 +76,7 @@ export function helpContent() {
 <p>Choose a bundled compound or search by name, PubChem CID, molecular formula or SMILES. Use explicit search mode when automatic detection is ambiguous. A formula can match many constitutional and stereochemical isomers; select the intended result. Salt forms and stereoisomers are not automatically interchangeable.</p>
 <p>PubChem supplies identity and structure, not brain-effect predictions. An uncurated result can be inspected without assigning activity. To run it as a research profile, explicitly enter target mechanism, affinity scale and required PK values with their evidence. Manual parameters remain assumptions until independently supported.</p>
 <h3>Views</h3><table><tbody>${rows([
+    ['Brain & workspace','Explore the cortical surface, select regional states, toggle cutaway/connections, inspect memory and the event journal, or ask a question. The optional language model is in Conversation settings.'],
     ['Bloodstream','Explore circulation, brain and organ context. Tracer motion is illustrative.'],
     ['Blood–brain barrier','Inspect a separately magnified capillary, tight junctions, pericyte and astrocyte endfeet.'],
     ['Synapse','Inspect local schematic transmitter and target interactions.'],
@@ -77,7 +88,7 @@ export function helpContent() {
     ['Free navigation','Use the camera control or F; drag to look. W/A/S/D move, Q/E move down/up, Shift moves faster.'],
     ['Reset perspective','Use the camera reset control or 0.'],
     ['Pause / resume','Use playback or Space. Camera navigation remains available while paused.'],
-    ['Step','Advance one 0.05-second application tick and remain paused. PK and neural increments follow their separate clock settings.'],
+    ['Step','Advance two 0.05-second application ticks and remain paused. PK and neural increments follow their separate clock settings.'],
     ['Timeline','Seek recorded history to pause there. Resuming or editing creates a new branch and discards the old future.'],
     ['Import / export','Save an experiment JSON with its state and parameters. Import restores a compatible experiment; review imported research assumptions.'],
   ])}</tbody></table>
@@ -131,7 +142,11 @@ ${contributors.length ? `<h3>Contributors at the current modeled brain exposure<
 }
 
 export function sourcesContent(catalog) {
-  const sources = unique([...array(catalog?.sources), ...compounds(catalog).flatMap(p => array(p.sources)), izhikevich]);
+  const sources = unique([...array(catalog?.sources), ...compounds(catalog).flatMap(p => array(p.sources)), izhikevich,
+    {title:'Wilson & Cowan (1972), Excitatory and inhibitory interactions in localized populations of model neurons',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC1484078/'},
+    {title:'Nilearn fsaverage5 reference surfaces',url:'https://nilearn.github.io/dev/modules/description/fsaverage5.html'},
+    {title:'Yeo et al. (2011), Organization of human cerebral cortex estimated by intrinsic functional connectivity',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC3174820/'},
+    {title:'WebLLM browser inference documentation',url:'https://webllm.mlc.ai/docs/'}]);
   return `<h2>Evidence you can trace.</h2><p>Molecular identity, assay affinity, parameter assumptions and illustrative neural coupling are separate claims. A source supports its stated evidence; it does not validate the whole simulation. Sources below are deduplicated by URL.</p>
 ${catalog?.retrieved ? `<p>Catalog retrieval: ${e(catalog.retrieved)}.</p>` : ''}
 <div class="callout"><p>Published Ki values retain their assay context. Illustrative K* scales, efficacy coefficients and assumed brain-distribution parameters are identified in each profile. Unknown values stay unknown. PubChem provides computed conformers or explicitly labeled 2D drawings.</p></div>

@@ -1,6 +1,8 @@
 import { PharmacologySimulation, validateCompound, PK_DT_HOURS } from './pharmacology.js';
 import { NeuralSimulation, NEURAL_DT_MS } from './neural.js';
 import { Simulation, BOUNDS } from './simulation.js';
+import { BrainSimulation, BRAIN_DT_MS } from './brain.js';
+import { CognitiveWorkspace } from './cognition.js';
 
 export const EXPERIMENT_DT_SECONDS = 0.05;
 export const EXPERIMENT_CLOCKS = Object.freeze({ pkHoursPerPlaybackSecond: 0.5, neuralMsPerPlaybackSecond: 25, synapseSecondsPerPlaybackSecond: 1 });
@@ -39,6 +41,16 @@ function validateEngineStates(state) {
   if (state.pk.options?.stepHours !== PK_DT_HOURS || state.neural.options?.dtMs !== NEURAL_DT_MS) throw new RangeError('Checkpoint uses incompatible engine clocks');
   finite(state.pk.timeHours, 'PK time'); finite(state.neural.timeMs, 'neural time'); finite(state.synapse.time, 'synapse time');
   if (state.pk.timeHours > state.timeSeconds * EXPERIMENT_CLOCKS.pkHoursPerPlaybackSecond + EPSILON || Math.abs(state.neural.timeMs - state.timeSeconds * EXPERIMENT_CLOCKS.neuralMsPerPlaybackSecond) > EPSILON || Math.abs(state.synapse.time - state.timeSeconds) > EPSILON) throw new RangeError('Engine clocks do not match playback');
+  // Older v1 files predate the regional model/workspace. Their missing states
+  // are initialized on import with an explicit migration note, never inferred.
+  if (state.brain !== undefined) {
+    if (!state.brain || state.brain.options?.dtMs !== BRAIN_DT_MS) throw new RangeError('Incompatible regional brain clock');
+    finite(state.brain.timeMs, 'regional brain time'); finite(state.brain.accumulator, 'regional brain remainder', 0, BRAIN_DT_MS);
+    if (Math.abs(state.brain.timeMs + state.brain.accumulator - state.neural.timeMs) > EPSILON) throw new RangeError('Regional brain clock does not match neural time');
+  }
+  if (state.cognition !== undefined) {
+    if (!state.cognition || Math.abs(state.cognition.timeSeconds - state.timeSeconds) > EPSILON || state.cognition.accumulator !== 0) throw new RangeError('Cognitive workspace clock does not match playback');
+  }
 
   if (!state.pk.records || typeof state.pk.records !== 'object' || Array.isArray(state.pk.records) || Object.keys(state.pk.records).length > 1200) throw new TypeError('Invalid PK records');
   for (const [id, record] of Object.entries(state.pk.records)) {
@@ -125,7 +137,7 @@ function validateEngineStates(state) {
   }
 }
 
-/** Coordinates three separate model clocks. Playback seconds are NOT elapsed
+/** Coordinates separate model clocks. Playback seconds are NOT elapsed
  * human physiology: PK hours, neural milliseconds and local synapse seconds
  * are deliberately independent scales, exposed in EXPERIMENT_CLOCKS.
  */
@@ -134,6 +146,8 @@ export class Experiment {
     this.pk = new PharmacologySimulation(catalog);
     this.neural = new NeuralSimulation();
     this.synapse = new Simulation({ drugConcentration: 0, releaseRate: 3 });
+    this.brain = new BrainSimulation();
+    this.cognition = new CognitiveWorkspace();
     this._advanceSystemic = true;
     this.timeSeconds = 0; this.ticks = 0; this.accumulator = 0;
     this.qualitative = [];
@@ -154,6 +168,7 @@ export class Experiment {
   _syncTargets() {
     const targets = this.pk.stats.targets;
     this.neural.setTargets(targets);
+    this.brain.setTargets(targets);
     // The legacy synapse uses an illustrative drug Kd=1 nM. The dimensionless
     // combined SERT binding load Σ(C_free/K*) becomes its equivalent reservoir.
     const load = targets.SERT.contributors.reduce((sum, contributor) => sum + contributor.weight, 0);
@@ -165,6 +180,9 @@ export class Experiment {
     if (this._advanceSystemic) this.pk.advance(dt * EXPERIMENT_CLOCKS.pkHoursPerPlaybackSecond);
     this._syncTargets();
     this.neural.advance(dt * EXPERIMENT_CLOCKS.neuralMsPerPlaybackSecond);
+    this.brain.setDrive(this.cognition.drives);
+    this.brain.advance(dt * EXPERIMENT_CLOCKS.neuralMsPerPlaybackSecond);
+    this.cognition.advance(dt, this.brain.stats);
     this.synapse.advance(dt);
     this.timeSeconds = ++this.ticks * dt;
     if (record) {
@@ -255,8 +273,28 @@ export class Experiment {
     return result;
   }
 
+  receiveMessage(text) {
+    const message = this.cognition.receive(text);
+    this._branch(); this._checkpoint();
+    return message;
+  }
+
+  recordResponse(response) {
+    const message = this.cognition.recordResponse(response);
+    this._branch(); this._checkpoint();
+    return message;
+  }
+
+  setAutonomous(value) {
+    if (typeof value !== 'boolean') throw new TypeError('Autonomous workspace switch must be boolean');
+    if (this.cognition.autonomous === value) return this;
+    this._branch(); this.cognition.autonomous = value; this._checkpoint();
+    return this;
+  }
+
   reset() {
     this.pk.reset(); this.neural.reset(42); this.synapse.setParams({ drugConcentration: 0, releaseRate: 3 }); this.synapse.reset(42);
+    this.brain.reset(42); this.cognition.reset();
     this.qualitative = []; this._advanceSystemic = true;
     this.timeSeconds = 0; this.ticks = 0; this.accumulator = 0;
     this.checkpoints = []; this.history = []; this.latestTime = 0; this.atHistory = false;
@@ -279,11 +317,15 @@ export class Experiment {
   }
 
   snapshot() {
-    return { version: 1, ticks: this.ticks, timeSeconds: this.timeSeconds, accumulator: this.accumulator, advanceSystemic: this._advanceSystemic, qualitative: clone(this.qualitative), pk: this.pk.snapshot(), neural: this.neural.snapshot(), synapse: this.synapse.snapshot() };
+    return { version: 1, ticks: this.ticks, timeSeconds: this.timeSeconds, accumulator: this.accumulator, advanceSystemic: this._advanceSystemic, qualitative: clone(this.qualitative), pk: this.pk.snapshot(), neural: this.neural.snapshot(), synapse: this.synapse.snapshot(), brain: this.brain.snapshot(), cognition: this.cognition.snapshot() };
   }
 
   _load(state) {
     this.pk.restore(state.pk); this.neural.restore(state.neural); this.synapse.restore(state.synapse);
+    if (state.brain !== undefined) this.brain.restore(state.brain);
+    else this.brain.reset(42).setTargets(this.pk.stats.targets).alignTime(state.neural.timeMs);
+    if (state.cognition !== undefined) this.cognition.restore(state.cognition);
+    else this.cognition.initializeAt(state.timeSeconds);
     this.timeSeconds = state.timeSeconds; this.ticks = state.ticks; this.accumulator = state.accumulator;
     this._advanceSystemic = state.advanceSystemic; this.qualitative = clone(state.qualitative);
   }
@@ -301,7 +343,7 @@ export class Experiment {
     candidate._checkpoint();
     // Views may cache the engine objects. Preserve those identities while
     // adopting the fully validated internal state from the fresh candidate.
-    for (const key of ['pk', 'neural', 'synapse']) Object.assign(this[key], candidate[key]);
+    for (const key of ['pk', 'neural', 'synapse', 'brain', 'cognition']) Object.assign(this[key], candidate[key]);
     for (const key of ['timeSeconds', 'ticks', 'accumulator', '_advanceSystemic', 'qualitative', 'checkpoints', 'history', 'latestTime', 'atHistory']) this[key] = candidate[key];
     return this;
   }
