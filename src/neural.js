@@ -3,25 +3,30 @@
  * v'=.04v²+5v+140-u+I; u'=a(bv-u); at v>=30mV: v=c,u+=d.
  * Source: https://www.izhikevich.org/publications/spikes.pdf
  * Neural time (ms) is separate from PK time (hours). Receptor-to-current
- * coefficients below are exposed illustrative choices, not measured regional
- * pharmacodynamics. This network does not predict subjective drug effects.
+ * coefficients below are exposed illustrative choices, except the identified
+ * diazepam synaptic-decay calibration. Its rat-culture transfer remains an
+ * assumption. This network does not predict subjective drug effects.
  */
 import { seededRandom, gaussian } from './simulation.js';
+import { BASELINE_INHIBITION_DECAY_MS, DIAZEPAM_NEURAL_CALIBRATION, gabaDecayCalibration } from './neural-evidence.js';
 
 export const NEURAL_DT_MS = 0.25;
 export const NEURAL_DEFAULTS = Object.freeze({ seed: 42, excitatoryCount: 32, inhibitoryCount: 8, dtMs: NEURAL_DT_MS, connectionProbability: 0.2, excitatoryInput: 6, inhibitoryInput: 5, noiseAmplitude: 0.9 });
 const clone = value => structuredClone(value);
 const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
+const LEGACY_MIGRATION_NOTE = 'Imported older circuit state: inhibitory decay was migrated from the assumed 10 ms setting to the rat-culture reference. Continued playback is not an exact replay of the older model.';
 function nonnegative(value, name) { if (!Number.isFinite(value) || value < 0) throw new RangeError(`${name} must be finite and nonnegative`); return value; }
 
-/** Every coefficient here is a model assumption. Sign and magnitude depend
- * on cell type, brain region and circuit in reality. Transporter blockade is
- * mapped to a bounded monoamine drive; there is no simulated transmitter pool.
+/** Current gains/biases are assumptions. Identified diazepam uses measured
+ * synaptic decay endpoints, with explicit interpolation and cross-preparation
+ * assumptions, instead of the generic GABA gain and direct-current bias.
+ * Transporter blockade still uses a bounded assumed monoamine drive.
  */
 export function modulationFromTargets(targets = {}) {
   const delta = id => Number.isFinite(targets[id]?.delta) ? targets[id].delta : 0;
   const blockade = id => Number.isFinite(targets[id]?.activity) ? clamp(1 - targets[id].activity, 0, 1) : 0;
-  const gaba = Math.max(0, delta('GABAA'));
+  const calibration = gabaDecayCalibration(targets.GABAA);
+  const gaba = calibration ? 0 : Math.max(0, delta('GABAA'));
   const nmda = Math.max(0, -delta('NMDA'));
   const monoamine = 0.4 * blockade('SERT') + 1.2 * blockade('DAT') + 1.2 * blockade('NET');
   return {
@@ -29,7 +34,14 @@ export function modulationFromTargets(targets = {}) {
     inhibitoryBias: clamp(1.5 * delta('NACHR') - nmda, -3, 3),
     excitatoryGain: clamp(1 - 1.2 * nmda, 0.2, 2),
     inhibitoryGain: clamp(1 + 4 * gaba, 0.25, 4),
-    interpretation: 'Illustrative cortical E/I transfer function; not a universal receptor effect or clinical prediction.',
+    inhibitionDecayMs: calibration?.inhibitionDecayMs ?? BASELINE_INHIBITION_DECAY_MS,
+    inhibitionEvidence: calibration?.evidence ?? {
+      status: gaba > 0 ? 'estimated-unmatched-gabaa-effect' : 'reference-baseline-derived-tau',
+      calibrationId: null,
+      sourceUrl: DIAZEPAM_NEURAL_CALIBRATION.sourceUrl,
+      interpretation: gaba > 0 ? 'GABAA current gain and bias are estimated: this compound or mixture has no supported synaptic-decay calibration.' : 'Baseline rat-culture duration 41 ms converted to an equivalent exponential tau; transfer to this circuit is assumed.',
+    },
+    interpretation: 'Illustrative E/I circuit: selected synaptic kinetics have experimental anchors; other receptor-to-current gains and cross-species transfers are estimates, not a clinical prediction.',
   };
 }
 
@@ -75,6 +87,7 @@ export class NeuralSimulation {
     const architectureRng = seededRandom(seed);
     this.noiseRng = seededRandom((seed >>> 0) ^ 0x742cef21);
     this.ticks = 0; this.timeMs = 0; this.accumulator = 0; this.lastNoiseTick = -1;
+    this.migrationNote = null;
     const count = this.options.excitatoryCount + this.options.inhibitoryCount;
     this.neurons = Array.from({ length: count }, (_, id) => {
       const type = id < this.options.excitatoryCount ? 'E' : 'I';
@@ -122,9 +135,9 @@ export class NeuralSimulation {
 
   _advancePopulation(population, baseline, time, dt) {
     const fired = [];
-    const modulation = baseline ? { excitatoryBias: 0, inhibitoryBias: 0, excitatoryGain: 1, inhibitoryGain: 1 } : this.modulation;
+    const modulation = baseline ? { excitatoryBias: 0, inhibitoryBias: 0, excitatoryGain: 1, inhibitoryGain: 1, inhibitionDecayMs: BASELINE_INHIBITION_DECAY_MS } : this.modulation;
     for (const neuron of population) {
-      neuron.synE *= Math.exp(-dt / 5); neuron.synI *= Math.exp(-dt / 10);
+      neuron.synE *= Math.exp(-dt / 5); neuron.synI *= Math.exp(-dt / (modulation.inhibitionDecayMs ?? BASELINE_INHIBITION_DECAY_MS));
       const bias = neuron.type === 'E' ? this.options.excitatoryInput + modulation.excitatoryBias : this.options.inhibitoryInput + modulation.inhibitoryBias;
       const current = bias + neuron.synE * modulation.excitatoryGain - neuron.synI * modulation.inhibitoryGain + this.noise[neuron.id];
       const count = integrateNeuron(neuron, current, dt, time);
@@ -165,11 +178,11 @@ export class NeuralSimulation {
     const totalSpikes = this.neurons.reduce((sum, n) => sum + n.spikeCount, 0);
     const meanExcitatoryHz = rate(this.spikes, 'E', e), meanInhibitoryHz = rate(this.spikes, 'I', i);
     const baselineExcitatoryHz = rate(this.baselineSpikes, 'E', e), baselineInhibitoryHz = rate(this.baselineSpikes, 'I', i);
-    return { timeMs: this.timeMs, meanExcitatoryHz, meanInhibitoryHz, baselineExcitatoryHz, baselineInhibitoryHz, excitatoryDeltaHz: meanExcitatoryHz - baselineExcitatoryHz, inhibitoryDeltaHz: meanInhibitoryHz - baselineInhibitoryHz, totalSpikes, baselineTotalSpikes: this.baselineNeurons.reduce((sum, n) => sum + n.spikeCount, 0), excitatoryCount: e, inhibitoryCount: i, windowMs, modulation: { ...this.modulation }, interpretation: 'Illustrative small cortical E/I circuit; neural milliseconds and PK hours are separate clocks.' };
+    return { timeMs: this.timeMs, meanExcitatoryHz, meanInhibitoryHz, baselineExcitatoryHz, baselineInhibitoryHz, excitatoryDeltaHz: meanExcitatoryHz - baselineExcitatoryHz, inhibitoryDeltaHz: meanInhibitoryHz - baselineInhibitoryHz, totalSpikes, baselineTotalSpikes: this.baselineNeurons.reduce((sum, n) => sum + n.spikeCount, 0), excitatoryCount: e, inhibitoryCount: i, windowMs, modulation: { ...this.modulation }, migrationNote: this.migrationNote, interpretation: 'Illustrative small cortical E/I circuit; neural milliseconds and PK hours are separate clocks.' };
   }
 
   snapshot() {
-    return clone({ version: 1, options: this.options, ticks: this.ticks, timeMs: this.timeMs, accumulator: this.accumulator, neurons: this.neurons, baselineNeurons: this.baselineNeurons, connections: this.connections, noise: this.noise, lastNoiseTick: this.lastNoiseTick, noiseRandomState: this.noiseRng.getState(), targets: this.targets, modulation: this.modulation, spikes: this.spikes, baselineSpikes: this.baselineSpikes, trace: this.trace });
+    return clone({ version: 1, options: this.options, ticks: this.ticks, timeMs: this.timeMs, accumulator: this.accumulator, neurons: this.neurons, baselineNeurons: this.baselineNeurons, connections: this.connections, noise: this.noise, lastNoiseTick: this.lastNoiseTick, noiseRandomState: this.noiseRng.getState(), targets: this.targets, modulation: this.modulation, migrationNote: this.migrationNote, spikes: this.spikes, baselineSpikes: this.baselineSpikes, trace: this.trace });
   }
 
   restore(snapshot) {
@@ -180,8 +193,15 @@ export class NeuralSimulation {
     nonnegative(data.accumulator, 'accumulator');
     if (data.accumulator >= checked.options.dtMs) throw new RangeError('Invalid checkpoint remainder');
     if (data.neurons.length !== checked.neurons.length || data.baselineNeurons.length !== checked.neurons.length) throw new TypeError('Checkpoint neuron count mismatch');
+    if (data.modulation.inhibitionDecayMs != null && (!Number.isFinite(data.modulation.inhibitionDecayMs) || data.modulation.inhibitionDecayMs <= 0)) throw new RangeError('Invalid inhibitory decay in checkpoint');
+    if (data.migrationNote != null && (typeof data.migrationNote !== 'string' || data.migrationNote.length > 1000)) throw new TypeError('Invalid neural migration note');
+    this.migrationNote = data.modulation.inhibitionDecayMs == null ? LEGACY_MIGRATION_NOTE : data.migrationNote ?? null;
     checked.noiseRng.setState(data.noiseRandomState);
     for (const key of ['options', 'ticks', 'timeMs', 'accumulator', 'neurons', 'baselineNeurons', 'connections', 'noise', 'lastNoiseTick', 'targets', 'modulation', 'spikes', 'baselineSpikes', 'trace']) this[key] = data[key];
+    // Older checkpoints predate evidence-based decay; preserve their stored
+    // current modulation and use the documented reference decay going forward.
+    this.modulation.inhibitionDecayMs ??= BASELINE_INHIBITION_DECAY_MS;
+    this.modulation.inhibitionEvidence ??= { status: 'legacy-estimated-current-modulation', calibrationId: null, interpretation: 'Legacy checkpoint migrated to reference rat-culture decay: kinetics changed, so continuation is not an exact replay of the older model. Stored current gains remain illustrative.' };
     this.noiseRng = checked.noiseRng;
     this.outgoing = Array.from({ length: this.neurons.length }, () => []);
     for (const edge of this.connections) this.outgoing[edge.from].push(edge);

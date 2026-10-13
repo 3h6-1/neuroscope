@@ -94,6 +94,7 @@ function validateEngineStates(state) {
     finite(entry.timeMs, 'trace time', 0, state.neural.timeMs + EPSILON); finite(entry.voltage, 'voltage', -1e6, 1e6); finite(entry.baselineVoltage, 'baseline voltage', -1e6, 1e6);
   }
   for (const field of ['excitatoryBias', 'inhibitoryBias', 'excitatoryGain', 'inhibitoryGain']) finite(state.neural.modulation?.[field], `modulation ${field}`, -100, 100);
+  if (state.neural.modulation.inhibitionDecayMs !== undefined) finite(state.neural.modulation.inhibitionDecayMs, 'inhibitory decay', 0.01, 10000);
 
   const syn = state.synapse;
   integer(syn.params.maxParticles, 'particle cap', 0, 4000);
@@ -169,9 +170,11 @@ export class Experiment {
     const targets = this.pk.stats.targets;
     this.neural.setTargets(targets);
     this.brain.setTargets(targets);
-    // The legacy synapse uses an illustrative drug Kd=1 nM. The dimensionless
-    // combined SERT binding load Σ(C_free/K*) becomes its equivalent reservoir.
-    const load = targets.SERT.contributors.reduce((sum, contributor) => sum + contributor.weight, 0);
+    // Match the target layer's remaining uptake capacity, including functional
+    // uptake assays. The microdomain still uses illustrative kinetics/Kd=1 nM:
+    // capacity=1/(1+load). This is an equivalent reservoir, not drug concentration.
+    const capacity = Math.max(1e-9, targets.SERT.activity);
+    const load = (1 - capacity) / capacity;
     this.synapse.setParams({ drugConcentration: load });
   }
 

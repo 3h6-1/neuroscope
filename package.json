@@ -1,6 +1,6 @@
 {
   "name": "neuroscope-lab",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "private": true,
   "type": "module",
   "description": "Interactive 3D brain pharmacology and cognition laboratory with MRI-derived cortex, regional dynamics, an inspectable symbolic workspace, and optional on-device dialogue",

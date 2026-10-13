@@ -6,6 +6,7 @@
  * are explicit model assumptions; regional exposure and active metabolites
  * are not inferred from chemical structure.
  */
+import { validateFunctionalAssay, functionalResponse, responsePool } from './functional-response.js';
 
 export const PK_DT_HOURS = 1 / 240;
 export const TARGET_IDS = Object.freeze(['SERT', 'DAT', 'NET', 'D2', 'HT2A', 'HT1A', 'GABAA', 'NMDA', 'ADENOSINE', 'NACHR']);
@@ -72,7 +73,13 @@ export function validateCompound(profile) {
         if (efficacy !== 0) throw new RangeError(`${action} must have efficacy 0; it does not activate the target`);
       }
       if (action === 'agonist' && efficacy !== 1) throw new RangeError('Full agonist efficacy must be 1; use partial_agonist for a fractional response');
-      if (action === 'pam' && efficacy !== 1) throw new RangeError('PAM efficacy must be the unit placeholder 1; potentiation uses the fixed assumed 2× occupancy gain');
+      if (action === 'pam' && efficacy !== 1) throw new RangeError('PAM efficacy must be the unit placeholder 1; potentiation uses a separate functional curve or estimated gain');
+    }
+    if (t.functionalAssay != null) {
+      if (t.kiNM == null) throw new TypeError('Functional profiles require a separately labeled binding model scale');
+      validateFunctionalAssay(t.functionalAssay, action);
+      const sources = new Set((p.sources || []).map(source => source.id));
+      if (t.functionalAssay.sourceIds.some(id => !sources.has(id))) throw new TypeError('Functional assay refers to a missing source');
     }
     return { ...t, target, action, ...(efficacy != null ? { efficacy } : {}) };
   });
@@ -142,7 +149,14 @@ export function computeTargets(exposures, compounds, endogenousDrive = DEFAULT_E
       for (const definition of profile.targets || []) {
         if (targetName(definition.target) !== target || !Number.isFinite(definition.kiNM) || definition.kiNM <= 0 || definition.action === 'cofactor') continue;
         const action = actionName(definition.action);
-        candidates.push({ id: profile.id, name: profile.name, action, affinityNM: definition.kiNM, efficacy: definition.efficacy ?? 0, weight: Math.max(0, exposure.brainNM || 0) / definition.kiNM });
+        const concentrationNM = finite(exposure.brainNM ?? 0, `${profile.id} brain concentration`);
+        candidates.push({ id: profile.id, name: profile.name, action, concentrationNM,
+          affinityNM: definition.kiNM, efficacy: definition.efficacy ?? 0, weight: concentrationNM / definition.kiNM,
+          custom: Boolean(profile.custom),
+          bindingEvidence: definition.evidenceType === 'assay' && !profile.custom ? 'assay-derived binding model' : 'estimated binding proxy',
+          ...(definition.functionalAssay ? { functionalAssay: definition.functionalAssay } : {}),
+          ...(!profile.custom && definition.neuralCalibrationId ? { neuralCalibrationId: definition.neuralCalibrationId } : {}),
+        });
       }
     }
     const orthosteric = candidates.filter(c => !['pam', 'channel_blocker'].includes(c.action));
@@ -160,14 +174,32 @@ export function computeTargets(exposures, compounds, endogenousDrive = DEFAULT_E
     const allostericOccupancy = sum(allosteric) / pamDenominator;
     const channelOccupancy = sum(channel) / channelDenominator;
     let activity = transporter ? 1 - orthostericOccupancy : drive / denominator + orthosteric.reduce((n, c) => n + c.weight * c.efficacy / denominator, 0);
-    // PAM amplification is a declared illustrative gain, not measured efficacy.
-    activity = Math.min(1, activity * (1 + 2 * allostericOccupancy)) * (1 - channelOccupancy);
+    // Functional endpoints get their own response pool, never the Ki-based
+    // occupancy denominator. Baseline interpolation and cross-assay pooling
+    // are declared assumptions even when EC50/IC50/Emax are measurements.
+    if (orthosteric.some(c => c.functionalAssay && c.concentrationNM > 0)) {
+      // Normalize legacy ligand weights by endogenous drive so introducing
+      // an infinitesimal assay-backed ligand cannot jump an existing mixture.
+      const pool = responsePool(orthosteric, c => transporter ? 1 : c.efficacy, c => c.weight / (transporter ? 1 : 1 + drive));
+      activity = transporter ? 1 - pool.weightedResponse / pool.denominator : (baselineActivity + pool.weightedResponse) / pool.denominator;
+    }
+    const pamPool = responsePool(allosteric, () => 2);
+    const channelPool = responsePool(channel, () => 1);
+    activity = Math.min(1, activity * (1 + pamPool.weightedResponse / pamPool.denominator)) * (1 - channelPool.weightedResponse / channelPool.denominator);
+    const functionalResponses = candidates.filter(c => c.functionalAssay).map(c => ({
+      id: c.id, name: c.name, concentrationNM: c.concentrationNM,
+      assayResponse: functionalResponse(c.concentrationNM, c.functionalAssay), assay: c.functionalAssay,
+      evidenceBasis: c.custom ? 'User-supplied assay hypothesis; not independently verified' : 'Curated assay reference; estimated transfer to the modeled brain',
+    }));
     targets[target] = {
       id: target, kind: transporter ? 'transporter' : 'receptor',
       occupancy: 1 - (1 - orthostericOccupancy) * (1 - allostericOccupancy) * (1 - channelOccupancy),
       orthostericOccupancy, allostericOccupancy, channelOccupancy,
       baselineActivity, activity, delta: activity - baselineActivity,
       endogenousDrive: drive, contributors,
+      functionalResponses,
+      responseBasis: functionalResponses.length ? (candidates.some(c => c.custom && c.functionalAssay) ? 'Includes user-supplied assay hypotheses; estimated transfer to brain and mixture response' : 'Experimental assay curve; estimated transfer to brain and mixture response') : 'Estimated activity from binding model and assumed efficacy',
+      occupancyEvidence: candidates.some(c => c.bindingEvidence === 'estimated binding proxy') ? 'Estimated binding proxy; at least one affinity scale is assumed' : 'Assay-derived binding model; not measured in-vivo occupancy',
       interpretation: transporter ? 'Fractional transport capacity; inhibition is 1 − activity.' : 'Illustrative receptor drive, not a clinical effect or firing rate.',
     };
   }

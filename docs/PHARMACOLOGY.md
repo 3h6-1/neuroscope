@@ -67,9 +67,26 @@ Every target has `evidenceType`, `modelAssumption`, `affinityLabel` and evidence
 | Ketamine NMDA | 500 nM | Illustrative K\*; [NMDA studies](https://pmc.ncbi.nlm.nih.gov/articles/PMC5641405/) do not establish a universal voltage-/subunit-independent affinity. |
 | Fluoxetine SERT | 1 nM | Rounded illustrative K\*, supported qualitatively by [human transporter binding research](https://pubmed.ncbi.nlm.nih.gov/9537821/) |
 
-Ki, Kd, IC50 and EC50 are distinct. Species, receptor subtype, radioligand, substrate concentration, receptor state and assay pathway affect measured values. A receptor binding Ki does not determine channel-activation EC50 or a clinical response. **Every numeric efficacy coefficient in this app is illustrative**, including when the affinity is experimentally sourced. Neither numerical precision nor a source link implies whole-human precision.
+Ki, Kd, IC50 and EC50 are distinct. Species, receptor subtype, radioligand, substrate concentration, receptor state and assay pathway affect measured values. A receptor binding Ki does not determine channel-activation EC50 or a clinical response. The binding table above describes the occupancy layer. The separate functional response layer below uses measured endpoints where available. Legacy `efficacy` coefficients remain illustrative fallbacks, and are bypassed when an applicable functional assay is present. Neither numerical precision nor a source link implies whole-human precision.
 
-All `brainPartition` and `brainEquilibrationH` values are explicit assumptions. Free fractions are labeled individually: some come from product-label protein binding, some are approximations and some are unknown-parameter assumptions. The aripiprazole free fraction of 0.01 approximates an upper bound from reported greater-than 99% binding; it is not an exact measured value. LSD's 0.5 free fraction is an assumption, not a verified human value.
+## Functional concentration–response evidence
+
+`functionalAssay` records keep midpoint type and concentration in nM, maximum response, reference agonist or control, species, experimental preparation, endpoint, sources and limitations. The [functional evidence audit](research-pharmacology.md) lists the selected measurements. These are experiment-specific endpoints, not universal drug potencies or intrinsic neuronal efficacies. `src/functional-response.js` implements:
+
+```text
+w = (C / midpoint)^h
+assay response = Emax × w/(1+w)
+```
+
+An EC50 gives half of the selected assay maximum; an uptake/current-inhibition IC50 gives half of the selected inhibition maximum. A PAM maximum describes the fractional increase above the GABA control, so 1.91 means 191% potentiation (2.91 times control at saturation). Hill slopes and inhibition asymptotes without measured support are labeled assumptions. At the reported midpoint the reconstructed endpoint is exactly half maximal, but the curve is not a new fit to raw experimental observations or a human prediction interval.
+
+The input C is modeled unbound brain concentration substituted for experimental bath concentration. This, omitted receptor subtypes/signaling bias, endogenous tone, and application of a fixed-voltage channel experiment to a generic network are assumptions. Ketamine's selected IC50 includes its specific magnesium and voltage conditions; there is no dynamic voltage/use-dependent blockade model. The independent Ki-based occupancy calculation is **unchanged** by the functional curve and remains an estimated proxy when its affinity is not measured.
+
+To connect these assays to the simulation, when an orthosteric functional curve is available the estimated activity proxy is `(Acontrol + Σw_i Emax_i)/(1+Σw_i)`. For transporter inhibition, remaining capacity is `1−Σw_i Imax_i/(1+Σw_i)`. Unmeasured receptor competitors use weights `(C/K*)/(1+w0)` and fallback efficacy; transporters use `C/K*`. The normalization preserves the legacy response when an assay-backed ligand approaches zero concentration. These cross-assay pools and baseline interpolation are explicit modeling choices, not measured combination responses or a mechanistic derivation from receptor reserve. PAMs use gain `1+Σw_i Pmax_i/(1+Σw_i)`; channel blockers use remaining fraction `1−Σw_i Imax_i/(1+Σw_i)`. Without functional data, the previous binding-based response rules below are retained. Every target panel distinguishes functional response evidence from occupancy evidence.
+
+The synapse microdomain now receives the equivalent SERT load `(1−capacity)/capacity`, matching the general target layer's functional uptake capacity. Its microscopic rates and equivalent reservoir concentration remain illustrative; it does not become an independently calibrated transport-cycle model.
+
+`brainEquilibrationH` values remain explicit assumptions. Most `brainPartition` values remain assumed; bupropion now uses a rat microdialysis/population-model Kp,uu of 1.9, with transfer to humans labeled an estimate. Free fractions are labeled individually: some come from product-label protein binding, some are approximations and some are unknown-parameter assumptions. The aripiprazole free fraction of 0.01 approximates an upper bound from reported greater-than 99% binding; it is not an exact measured value. LSD's 0.5 free fraction is an assumption, not a verified human value.
 
 ## Plasma and brain compartments
 
@@ -135,7 +152,7 @@ activity proxy = (w0 + Σwi εi)/denominator
 
 For transporters, the simplified substrate-free competition denominator is `1+Σwi`; available capacity is `1−total drug occupancy`. This does not resolve substrate transport states or convert occupancy directly into a transmitter concentration.
 
-PAMs use a separate binding pool, and potentiate pre-existing receptor activity. Channel blockers use a separate reduction factor. These are teaching approximations; they omit multiple binding sites, allosteric cooperativity, channel use dependence, voltage, signaling bias, internalization and desensitization. Aripiprazole is a partial agonist, so its effect on the activity proxy depends on endogenous drive. It should not be displayed as a fixed dopamine “block percentage” equivalent to a pure antagonist.
+PAMs use a separate binding pool, and potentiate pre-existing receptor activity. Channel blockers use a separate reduction factor. Binding occupancy uses the equations above; activity uses the functional curve where supplied, otherwise the legacy response approximation. These are teaching approximations; they omit multiple binding sites, allosteric cooperativity, channel use dependence, voltage, signaling bias, internalization and desensitization. Aripiprazole is a partial agonist, so its effect on the activity proxy depends on endogenous drive. It should not be displayed as a fixed dopamine “block percentage” equivalent to a pure antagonist.
 
 The shared adenosine, GABAA, NMDA and nicotinic targets compress receptor subtypes and anatomical distributions. Serotonergic effects cannot be combined into a validated additive clinical risk or experience score. A human [paroxetine–LSD experiment](https://pubmed.ncbi.nlm.nih.gov/40022427/) illustrates that metabolic and subjective effects can diverge; it does not validate extrapolation to every serotonergic combination. Absence of a modeled interaction means that the interaction is **not represented**, not that a combination is safe.
 
@@ -151,9 +168,15 @@ if v ≥ 30: v ← c; u ← u + d
 
 Its membrane variable and recovery variable produce spikes in a reduced point-neuron model. They are not an all-channel Hodgkin–Huxley reconstruction. Neural time is in **milliseconds**, separate from the PK clock in hours.
 
-The default network has 32 excitatory regular-spiking units and 8 inhibitory fast-spiking units. Connections are randomly drawn with 20% probability. Excitatory and inhibitory synaptic currents decay with 5 ms and 10 ms time constants. Voltage integration uses two half steps within a 0.25 ms neural step. A seeded matched control uses the same network and background noise without drug modulation. Firing-rate summaries use a rolling 1-second neural window.
+The default network has 32 excitatory regular-spiking units and 8 inhibitory fast-spiking units. Connections are randomly drawn with 20% probability. Excitatory synaptic current retains an assumed 5 ms decay. Baseline inhibitory decay is now `41/ln(4) ≈ 29.58 ms`, derived from the rat-culture reference below; transfer to this generic circuit is assumed. Voltage integration uses two half steps within a 0.25 ms neural step. A seeded matched control uses the same network, reference decay and background noise without drug modulation. Firing-rate summaries use a rolling 1-second neural window.
 
-**The entire mapping from target activity to network input and synaptic gain is illustrative.** It is neither fitted to human electrophysiology nor implied by the receptor assays. For auditability, with `δT` denoting change in the target activity proxy:
+### Measured inhibitory-current duration
+
+For identified diazepam alone at the GABAA target, [Cao et al. (2018)](https://doi.org/10.1038/s41598-018-28754-7) supply peak-to-25% sIPSC durations of 41, 63, 65 and 87 ms at 0, 10, 100 and 1000 nM in rat hippocampal cultures. Their endpoint is **not** exponential tau. Assuming a single exponential, `exp(−duration/tau)=0.25` gives `tau=duration/ln(4)`. In this path the GABA terms in the generic current bias/gain below are disabled, and only inhibitory decay is prolonged. The measured functional PAM curve still supplies the separately labeled regional activity proxy; it is not also applied to circuit amplitude.
+
+The [synaptic evidence audit](research-neural.md) records SDs, sample sizes, bath pretreatment, interpolation and transfer assumptions. Below 10 nM, linear interpolation is estimated; between measured positive nodes interpolation uses log concentration. Above 1000 nM the final anchor is held and marked outside the measured range, not asserted to be a measured plateau. An unmatched GABAA drug/mixture disables this single-compound calibration and retains estimated generic modulation. No whole-human or dose-to-firing calibration is claimed.
+
+**All remaining target-to-current shifts and amplitude gains are estimates.** They are neither fitted to human electrophysiology nor implied by the receptor assays. For auditability, with `δT` denoting change in the target activity proxy (set GABAincrement and the GABA bias term to zero on the calibrated decay path):
 
 ```text
 E input shift = clip[−5,7](

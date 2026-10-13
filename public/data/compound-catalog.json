@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "title": "Curated brain pharmacology teaching catalog",
   "retrieved": "2026-10-13",
   "scope": "Sourced molecular identities and selected pharmacology with explicit model assumptions. No patient-specific PK, clinical effect or combination-safety prediction.",
@@ -11,7 +11,9 @@
   },
   "modelAssumptions": [
     "Target affinities differ by assay, species, radioligand and receptor state. Ki, Kd, EC50 and IC50 are distinct.",
-    "All numeric efficacy coefficients, brainPartition values and brainEquilibrationH values are illustrative.",
+    "Selected targets include assay-specific functional EC50/IC50 and response maxima, separate from binding Ki/Kd. Legacy efficacy coefficients and brainEquilibrationH remain illustrative. Bupropion brainPartition is rat-model-derived with estimated human transfer; other brainPartition values are illustrative.",
+    "Functional response curves retain experimental species, cell system, endpoint and reference response. Hill slopes, transfer to brain concentration and combination pooling are estimated unless explicitly sourced.",
+    "A measured cellular response is not a measured change in human neuron firing or cognition. Receptor reserve, signaling bias and anatomical context can change both magnitude and direction.",
     "Default concentrations are demonstration exposures, not doses or therapeutic targets.",
     "Metabolism enzyme identities are sourced; any numeric inhibition strength and fractional clearance allocation are model assumptions.",
     "Serotonergic interactions are qualitative, context-dependent and cannot be translated to a precise safety or symptom score.",
@@ -166,6 +168,21 @@
           "evidenceType": "assay",
           "modelAssumption": false,
           "subtype": "DRD2",
+          "functionalAssay": {
+            "kind": "activation",
+            "midpointNM": 38,
+            "midpointType": "EC50",
+            "maxResponse": 0.51,
+            "maxResponseEvidence": "Measured assay Emax 51% of quinpirole response; not intrinsic efficacy in every tissue.",
+            "hillSlope": 1,
+            "hillEvidence": "Estimated unit Hill slope; not extracted from the published fit.",
+            "endpoint": "D2-mediated inhibition of isoproterenol-stimulated cAMP, GloSensor-22F",
+            "system": "HEK293T cells expressing recombinant dopamine D2 receptor",
+            "species": "Human receptor in a human cell line",
+            "reference": "Quinpirole maximum = 100%",
+            "sourceIds": ["aripiprazole-d2-functional"],
+            "notes": "Allen et al. 2011, Fig. 2A: pEC50 7.4 ± 0.1; Emax 51 ± 5%; at least two independent experiments. The figure does not identify the error convention, so these errors are not treated as population confidence intervals. Other signaling assays in the same paper differ substantially."
+          },
           "evidence": {
             "type": "assay",
             "note": "Labeled D2 binding Ki 0.34 nM; efficacy depends on signaling pathway, receptor reserve and endogenous dopamine.",
@@ -190,6 +207,21 @@
           "evidenceType": "assay",
           "modelAssumption": false,
           "subtype": "HTR1A",
+          "functionalAssay": {
+            "kind": "activation",
+            "midpointNM": 2.138,
+            "midpointType": "EC50",
+            "maxResponse": 0.681,
+            "maxResponseEvidence": "Measured assay Emax 68.1% relative to 10 µM serotonin; not a universal intrinsic efficacy.",
+            "hillSlope": 1,
+            "hillEvidence": "Estimated unit Hill slope; not extracted from the published fit.",
+            "endpoint": "5-HT1A-stimulated [35S]GTPγS binding",
+            "system": "CHO cell membranes expressing recombinant human 5-HT1A receptors",
+            "species": "Human receptor in Chinese hamster ovary cells",
+            "reference": "10 µM serotonin response = 100%",
+            "sourceIds": ["aripiprazole-ht1a-functional"],
+            "notes": "Jordan et al. 2002, Table 1: pEC50 8.67 ± 0.16 SEM. EC50 = 10^(9 − 8.67) nM, rounded to 2.138 nM. Assay G-protein activation is not a neuronal firing response."
+          },
           "evidence": {
             "type": "assay",
             "note": "Labeled 5-HT1A binding Ki 1.7 nM; partial agonism is qualitative pharmacology.",
@@ -296,6 +328,16 @@
           "id": "aripiprazole-label",
           "title": "DailyMed, aripiprazole prescribing information",
           "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=569f1c32-fb6f-c34f-0894-4b1e7b744a8a"
+        },
+        {
+          "id": "aripiprazole-d2-functional",
+          "title": "Allen et al. (2011), D2 pathway-selective signaling, Figure 2A",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3215024/"
+        },
+        {
+          "id": "aripiprazole-ht1a-functional",
+          "title": "Jordan et al. (2002), aripiprazole at human 5-HT1A receptors, Table 1",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12063084/"
         }
       ],
       "unavailable3D": false,
@@ -332,6 +374,21 @@
           "evidenceType": "illustrative",
           "modelAssumption": true,
           "subtype": "SLC6A2",
+          "functionalAssay": {
+            "kind": "uptake_inhibition",
+            "midpointNM": 1900,
+            "midpointType": "IC50",
+            "maxResponse": 1,
+            "maxResponseEvidence": "Estimated normalized complete-inhibition asymptote; no independently fitted Emax is imported.",
+            "hillSlope": 1,
+            "hillEvidence": "Estimated unit Hill slope; not extracted from the published fit.",
+            "endpoint": "Inhibition of [3H]norepinephrine uptake",
+            "system": "Rat brain synaptosome uptake assay; racemic parent bupropion",
+            "species": "Rat",
+            "reference": "Drug-free transporter-specific uptake",
+            "sourceIds": ["bupropion-assay", "bupropion-uptake-table"],
+            "notes": "Damaj et al. 2004 potency, reproduced by the same laboratory in Damaj et al. 2010 Table 1: 1.9 µM = 1900 nM. This functional IC50 does not measure occupancy. Active metabolites are omitted."
+          },
           "evidence": {
             "type": "illustrative",
             "note": "K*1900 nM uses the reported 1.9 µM norepinephrine-uptake IC50 only as a rough model response scale. IC50 is not Ki and is not converted to an equilibrium affinity.",
@@ -358,6 +415,21 @@
           "evidenceType": "illustrative",
           "modelAssumption": true,
           "subtype": "SLC6A3",
+          "functionalAssay": {
+            "kind": "uptake_inhibition",
+            "midpointNM": 550,
+            "midpointType": "IC50",
+            "maxResponse": 1,
+            "maxResponseEvidence": "Estimated normalized complete-inhibition asymptote; no independently fitted Emax is imported.",
+            "hillSlope": 1,
+            "hillEvidence": "Estimated unit Hill slope; not extracted from the published fit.",
+            "endpoint": "Inhibition of [3H]dopamine uptake",
+            "system": "Rat brain synaptosome uptake assay; racemic parent bupropion",
+            "species": "Rat",
+            "reference": "Drug-free transporter-specific uptake",
+            "sourceIds": ["bupropion-assay", "bupropion-uptake-table"],
+            "notes": "Damaj et al. 2004 potency, reproduced in Damaj et al. 2010 Table 1. The measured 550 nM uptake IC50 replaces the assumed 1000 nM response scale only in the functional response calculation; neither number is established as binding Ki."
+          },
           "evidence": {
             "type": "illustrative",
             "note": "K*1000 nM is an illustrative DAT response scale; the label supports weak dopamine-reuptake inhibition, not this numeric Ki.",
@@ -379,7 +451,7 @@
       "pk": {
         "halfLifeH": 21,
         "freeFraction": 0.16,
-        "brainPartition": 1,
+        "brainPartition": 1.9,
         "brainEquilibrationH": 0.25,
         "evidence": {
           "halfLifeH": {
@@ -397,9 +469,9 @@
             ]
           },
           "brainPartition": {
-            "type": "illustrative",
-            "note": "Kp,uu = 1 is a teaching assumption for unbound brain/free plasma equilibrium; no tissue-specific measurement is claimed.",
-            "sourceIds": []
+            "type": "animal-model-derived",
+            "note": "Kp,uu,ss = 1.9 is the rat brain extracellular-fluid/unbound-plasma ratio from a population model fitted to microdialysis data. Applying it to this human teaching model is an estimated cross-species transfer; early transport overshoot and active metabolites are omitted.",
+            "sourceIds": ["bupropion-brain-pk"]
           },
           "brainEquilibrationH": {
             "type": "illustrative",
@@ -449,6 +521,16 @@
           "id": "bupropion-assay",
           "title": "Damaj et al. (2004), bupropion metabolites, transporters and nicotinic receptors",
           "url": "https://pubmed.ncbi.nlm.nih.gov/15322260/"
+        },
+        {
+          "id": "bupropion-uptake-table",
+          "title": "Damaj et al. (2010), Table 1 reproducing the 2004 uptake measurements",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2939668/"
+        },
+        {
+          "id": "bupropion-brain-pk",
+          "title": "Cremers et al. (2016), rat plasma/brain extracellular-fluid microdialysis population model",
+          "url": "https://doi.org/10.1124/dmd.115.068932"
         }
       ],
       "unavailable3D": false,
@@ -602,6 +684,21 @@
           "evidenceType": "assay",
           "modelAssumption": false,
           "subtype": "HTR2A",
+          "functionalAssay": {
+            "kind": "activation",
+            "midpointNM": 1.52,
+            "midpointType": "EC50",
+            "maxResponse": 0.94,
+            "maxResponseEvidence": "Measured assay Emax 94 ± 1% SEM of serotonin maximum; not intrinsic efficacy in all neuronal pathways.",
+            "hillSlope": 1,
+            "hillEvidence": "Estimated unit Hill slope; not extracted from the published fit.",
+            "endpoint": "Gq-mediated calcium mobilization, Fluo-4 fluorescence",
+            "system": "HEK-derived cells expressing recombinant human 5-HT2A receptors",
+            "species": "Human receptor in a human cell line",
+            "reference": "Serotonin maximum calcium response = 100%",
+            "sourceIds": ["lsd-assay"],
+            "notes": "Halberstadt et al. 2020, Table 4: pEC50 8.82 ± 0.05 SEM; 3–5 independent experiments in triplicate. Calcium-flux EC50 differs from the separately measured binding Ki 14.7 nM. β-arrestin recruitment and neuronal firing are not measured by this endpoint."
+          },
           "evidence": {
             "type": "assay",
             "note": "Human recombinant 5-HT2A binding, [3H]ketanserin displacement, Ki 14.7 nM in the cited comparison. Other assays report different values.",
@@ -1005,6 +1102,22 @@
           "evidenceType": "illustrative",
           "modelAssumption": true,
           "subtype": "benzodiazepine-sensitive GABAA",
+          "neuralCalibrationId": "diazepam-rat-hippocampal-sipsc-2018",
+          "functionalAssay": {
+            "kind": "potentiation",
+            "midpointNM": 64,
+            "midpointType": "EC50",
+            "maxResponse": 1.91,
+            "maxResponseEvidence": "Measured maximal fractional potentiation 1.91 ± 0.17 SD: increment relative to GABA-alone current, equivalent to a total current ratio of 2.91.",
+            "hillSlope": 1,
+            "hillEvidence": "Estimated unit Hill slope; not extracted from the published fit.",
+            "endpoint": "Potentiation of current evoked by 1 µM GABA",
+            "system": "Wild-type α1β2γ2 GABAA receptors expressed in Xenopus oocytes; −80 mV voltage clamp",
+            "species": "Rat receptor subunits in Xenopus oocytes",
+            "reference": "Current with 1 µM GABA alone",
+            "sourceIds": ["diazepam-functional"],
+            "notes": "Boileau and Czajkowski 1999, Table 1: EC50 64 ± 15 nM SD, at least 6 oocytes from at least 2 batches. Potentiation depends on GABA concentration and receptor subtype; it is not receptor occupancy or a universal synaptic-current increase."
+          },
           "evidence": {
             "type": "illustrative",
             "note": "K*10 nM is a teaching benzodiazepine-site response scale, not an assay-specific universal GABAA Ki. Potentiation requires background GABA signaling.",
@@ -1014,7 +1127,7 @@
           },
           "efficacyEvidence": {
             "type": "illustrative",
-            "note": "Unit placeholder for the allosteric modulation model. Potentiation uses the explicitly assumed fixed gain 1 + 2 × allosteric occupancy; this is not measured intrinsic efficacy.",
+            "note": "Legacy unit placeholder, not measured intrinsic efficacy. The separate functional assay now supplies potentiation; the identified neural circuit pathway uses synaptic decay measurements instead of an amplitude gain.",
             "sourceIds": [
               "diazepam-assay"
             ]
@@ -1092,6 +1205,11 @@
           "id": "diazepam-assay",
           "title": "Lavoie & Twyman (1996), diazepam modulation of GABAA receptors",
           "url": "https://pubmed.ncbi.nlm.nih.gov/9014155/"
+        },
+        {
+          "id": "diazepam-functional",
+          "title": "Boileau and Czajkowski (1999), GABAA benzodiazepine potentiation, Table 1",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6782401/"
         }
       ],
       "unavailable3D": false,
@@ -1127,6 +1245,21 @@
           "evidenceType": "illustrative",
           "modelAssumption": true,
           "subtype": "NMDA receptor channel",
+          "functionalAssay": {
+            "kind": "channel_inhibition",
+            "midpointNM": 5350,
+            "midpointType": "IC50",
+            "maxResponse": 1,
+            "maxResponseEvidence": "Normalized complete-inhibition asymptote of the concentration-inhibition model; not a separately measured clinical maximum.",
+            "hillSlope": 1,
+            "hillEvidence": "Estimated unit Hill slope for this implementation; not an extracted fit coefficient.",
+            "endpoint": "Inhibition of NR1/NR2A NMDA-receptor whole-cell current",
+            "system": "Recombinant NR1-1a/NR2A in HEK293T cells; −66 mV, 1 mM extracellular Mg2+, 1 mM glutamate, 100 µM glycine",
+            "species": "Rat receptor subunits in human HEK293T cells",
+            "reference": "Agonist-evoked current under the same Mg2+ and voltage conditions without ketamine",
+            "sourceIds": ["ketamine-functional"],
+            "notes": "Kotermanski and Johnson 2009, Table 1: IC50 5.35 ± 0.34 µM, fit SE, 3–4 cells. At zero Mg2+ the same subtype measured 0.33 ± 0.01 µM. Voltage, Mg2+ and subunit dependence are not dynamically resolved; this curve is one fixed assay condition."
+          },
           "evidence": {
             "type": "illustrative",
             "note": "K*500 nM is an illustrative NMDA-channel response scale, not a shared equilibrium Ki for every subunit, enantiomer or membrane potential.",
@@ -1214,6 +1347,11 @@
           "id": "ketamine-assay",
           "title": "Synthesis and NMDA receptor activity of ketamine metabolites (2017)",
           "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5641405/"
+        },
+        {
+          "id": "ketamine-functional",
+          "title": "Kotermanski and Johnson (2009), Mg2+-dependent NMDA channel inhibition, Table 1",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2679254/"
         }
       ],
       "unavailable3D": false,
@@ -1248,6 +1386,21 @@
           "evidenceType": "illustrative",
           "modelAssumption": true,
           "subtype": "SLC6A4",
+          "functionalAssay": {
+            "kind": "uptake_inhibition",
+            "midpointNM": 19,
+            "midpointType": "IC50",
+            "maxResponse": 1,
+            "maxResponseEvidence": "Estimated normalized complete-inhibition asymptote; no independently fitted Emax is imported.",
+            "hillSlope": 1,
+            "hillEvidence": "Estimated unit Hill slope; not extracted from the published fit.",
+            "endpoint": "Inhibition of [3H]serotonin uptake",
+            "system": "HEK293 cells stably expressing hSERT; 0.1 µM [3H]5-HT, 2.5 minutes at room temperature, 5-minute inhibitor preincubation",
+            "species": "Human transporter in a human cell line",
+            "reference": "Drug-free specific uptake; nonspecific uptake determined with 30 µM clomipramine",
+            "sourceIds": ["fluoxetine-functional"],
+            "notes": "Scholze et al. 2000, Table 1: uptake IC50 19 ± 2 nM SE, three independent experiments in duplicate or triplicate. This value is distinct from the paper's release EC50 and from binding affinity. Norfluoxetine is not included."
+          },
           "evidence": {
             "type": "illustrative",
             "note": "K*1 nM is a rounded educational SERT affinity scale, not a reproduced exact assay value. Human transporter binding is documented in the cited study.",
@@ -1338,6 +1491,11 @@
           "id": "fluoxetine-assay",
           "title": "Tatsumi et al. (1997), antidepressants at human monoamine transporters",
           "url": "https://pubmed.ncbi.nlm.nih.gov/9537821/"
+        },
+        {
+          "id": "fluoxetine-functional",
+          "title": "Scholze et al. (2000), human SERT uptake and release, Table 1",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10869387/"
         }
       ],
       "unavailable3D": false,

@@ -1,4 +1,5 @@
 /** All catalog, imported-profile and lookup content is treated as untrusted text. */
+import { DIAZEPAM_NEURAL_CALIBRATION } from './neural-evidence.js';
 export function escapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
@@ -32,6 +33,54 @@ function evidence(value, sources) {
 }
 const rows = entries => entries.map(([name, html]) => `<tr><th>${e(name)}</th><td>${html}</td></tr>`).join('');
 
+function functionalAssayContent(assay, sources, {custom = false, concentrationNM, assayResponse} = {}) {
+  if (!assay || typeof assay !== 'object') return '';
+  const hasSources = array(assay.sourceIds).some(id => array(sources).some(source => source.id === id));
+  const status = custom ? 'User-supplied assay hypothesis' : hasSources ? 'Sourced functional assay' : 'Unverified assay parameters';
+  const maximumLabel = assay.kind === 'potentiation' ? 'Maximum potentiation increment' : ['uptake_inhibition','channel_inhibition'].includes(assay.kind) ? 'Maximum inhibition' : 'Maximum assay response';
+  return `<section class="assay-evidence"><p>${pill(status)} ${pill('Assay-to-brain mapping estimated')}</p>
+<table><tbody>${rows([
+    [assay.midpointType || 'Response midpoint',`${number(assay.midpointNM)} nM`],
+    [maximumLabel,`${percent(assay.maxResponse)} of ${e(assay.reference || 'the stated assay reference')}`],
+    ['Maximum-response evidence',e(assay.maxResponseEvidence || 'Unverified maximum; treat as an estimate until its evidence is supplied.')],
+    ['Endpoint',e(assay.endpoint || 'Not supplied')],
+    ['Experimental system',e(assay.system || 'Not supplied')],
+    ['Species / receptor origin',e(assay.species || 'Not supplied')],
+    ['Hill slope',`${number(assay.hillSlope)} · ${e(assay.hillEvidence || 'Unverified')}`],
+    ...(Number.isFinite(concentrationNM) ? [['Current brain concentration proxy',`${number(concentrationNM)} nM`]] : []),
+    ...(Number.isFinite(assayResponse) ? [['Calculated assay response',percent(assayResponse)]] : []),
+  ])}</tbody></table>
+${assay.notes ? `<p>${e(assay.notes)}</p>` : ''}
+${refs(assay.sourceIds,sources)}
+<p class="field-note">An assay maximum is relative to its experimental reference; it is not a universal intrinsic efficacy or a percentage change in human neuron firing. Applying this curve to the free-brain concentration proxy, background activity and mixtures is an estimated mapping.</p></section>`;
+}
+
+function neuralReferenceContent() {
+  const calibration = DIAZEPAM_NEURAL_CALIBRATION;
+  return `<h3>Diazepam: direct synaptic reference</h3><p>${pill('Measured rat-culture endpoints')} ${pill('Circuit transfer estimated')}</p>
+<p>${e(calibration.preparation)} ${e(calibration.endpoint)}</p>
+<table><thead><tr><th>Bath concentration</th><th>Measured duration, mean ± SD</th><th>Cells</th></tr></thead><tbody>${calibration.points.map(p => `<tr><td>${number(p.concentrationNM)} nM</td><td>${number(p.durationMs)} ± ${number(p.sdMs)} ms</td><td>${number(p.cells)}</td></tr>`).join('')}</tbody></table>
+<p>${link({title:calibration.citation,url:calibration.sourceUrl})}</p>
+<p>${e(calibration.transformation)} ${e(calibration.transferAssumption)}</p>
+<p>Intermediate durations use an estimated interpolation: linear below 10 nM, linear in log concentration between measured nonzero points. Above 1,000 nM the last value is held and labeled outside the measured range. An unmatched GABA<sub>A</sub> drug or mixture uses the estimated fallback instead of extending this single-drug experiment. The circuit does not also apply the generic GABA gain to this calibrated pathway.</p>`;
+}
+
+export function neuralEvidenceContent(modulation = {}, migrationNote) {
+  const value = modulation.inhibitionEvidence || {};
+  const statuses = {
+    'measured-endpoint-derived-tau':'Measured endpoint · derived τ',
+    'reference-baseline-derived-tau':'Reference baseline · derived τ',
+    'estimated-low-concentration-interpolation':'Estimated concentration interpolation',
+    'estimated-log-concentration-interpolation':'Estimated concentration interpolation',
+    'capped-outside-measured-range':'Outside measured range · value capped',
+    'estimated-unmatched-gabaa-effect':'Estimated GABA effect · no matched calibration',
+    'legacy-estimated-current-modulation':'Legacy estimated circuit settings',
+  };
+  return `<span>INHIBITORY SYNAPTIC DECAY</span><p><strong>${number(modulation.inhibitionDecayMs)} ms</strong> · equivalent exponential τ</p><p>${pill(statuses[value.status] || 'Evidence not supplied')}</p>
+${Number.isFinite(value.concentrationNM) ? `<p>Brain concentration proxy: ${number(value.concentrationNM)} nM.</p>` : ''}
+<p>Rat-culture reference; transfer to this circuit is estimated. Other current gains, regional effects and cognitive mappings remain estimated.</p>${migrationNote ? `<p class="migration-note"><strong>Imported experiment:</strong> ${e(migrationNote)}</p>` : ''}`;
+}
+
 export function modelContent(catalog) {
   return `<h2>From exposure to regional activity and a workspace.</h2>
 <div class="callout"><p>NeuroScope links virtual plasma exposure, an unbound brain compartment, molecular targets, a spiking circuit, 30 regional population models, and an explicit memory-and-association workspace. It is a computational teaching model. Its traces do not predict a person's symptoms, cognition, treatment response or the safety of a drug combination.</p></div>
@@ -50,19 +99,27 @@ export function modelContent(catalog) {
 <code>Cp = P/Vp; Cf = f · Cp; Cb = B/Vb<br>r = f · Kp,uu · Vb/Vp; q = 1/τ<br>kBP = q/(1+r); kPB = q − kBP<br>dP/dt = −(ke + kPB)P + kBP B<br>dB/dt = kPB P − kBP B</code>
 <p>For x = (P, B), each step evaluates x(t + Δt) = exp(AΔt)x(t), where A = [[−ke−kPB, kBP], [kPB, −kBP]]. Nonnegative rates give a positive amount system. With elimination disabled, P + B is conserved and equilibrium gives Cb/Cf = Kp,uu. With elimination, the ledger verifies introduced = plasma + brain + eliminated + explicitly removed amount.</p>
 <p>The fixed PK step is <strong>1/240 hour (15 seconds)</strong>. Inhibitor-dependent elimination is frozen within each step: the linear propagator is exact for that step, while the changing interaction model is time-discretized. With λ = ln(2)/half-life and kBP &gt; λ, ke = λ(q−λ)/(kBP−λ) calibrates the slow eigenvalue. Otherwise the engine flags unsupported calibration and uses ke = λ.</p>
-<p>Free fraction f, partition Kp,uu and equilibration τ have separate evidence labels. Curated brain partition and equilibration values are assumptions. No absorption, dose-to-exposure conversion, explicit renal filtration, tissue binding or metabolite kinetics is resolved.</p>
-<h3>Binding, competition and efficacy</h3>
+<p>Free fraction f, partition Kp,uu and equilibration τ have separate evidence labels. Most brain-partition settings and all equilibration settings remain estimated. A rat bupropion Kp,uu value fitted to microdialysis data supplies one partition reference; transferring it to this human teaching model remains an assumption. No absorption, dose-to-exposure conversion, explicit renal filtration, tissue binding or metabolite kinetics is resolved.</p>
+<h3>Functional assay responses and binding are separate</h3>
+<code>Rassay(C) = Emax · Cⁿ / (EC50ⁿ + Cⁿ)<br>For inhibition endpoints, replace EC50 with IC50.</code>
+<p>Where a profile supplies functional data, the target response uses its published assay midpoint and a maximum with separate evidence. Some maxima are measured; a normalized complete-inhibition maximum is still estimated where no fitted maximum is available. Each profile lists that distinction, endpoint, experimental system, receptor origin and normalization reference. A missing Hill slope is explicitly estimated as n = 1. IC50 is an inhibition midpoint and EC50 an activation midpoint; neither is silently treated as a dissociation constant.</p>
+<p>These curves reproduce a reduced assay response, not a human neuron response. Applying an in-vitro concentration to the modeled unbound brain compartment, translating its endpoint into baseline activity and combining different assays in a mixture remain <strong>estimates</strong>. They are labeled separately from the measured parameters.</p>
+<code>wi = (Cb,i / midpointi)ⁿⁱ<br>Aproxy = (Abaseline + Σwi Emax,i) / (1 + Σwi)<br>Remaining transport capacity = 1 − Σwi Emax,inhibition,i / (1 + Σwi)<br>PAM multiplier = 1 + Σwi Emax,potentiation,i / (1 + Σwi)</code>
+<p>The activation formula interpolates the no-drug baseline toward each assay maximum. Shared denominators are an estimated mixture rule, not measured drug-combination data. Unmeasured receptor competitors use the normalized fallback weight (C/K*)/(1+w0) and illustrative efficacy; this preserves the original baseline as a concentration approaches zero. Channel inhibition uses the remaining-capacity form. The independent assay response is displayed alongside the resulting activity proxy so the two cannot be mistaken for each other.</p>
+<h3>Binding, competition and fallback efficacy</h3>
 <code>wi = Cb,i/K*i; D = 1 + w0 + Σwi<br>θi = wi/D<br>Aorth = (w0 + Σwi εi)/D<br>Acontrol = w0/(1+w0)</code>
-<p>Orthosteric ligands compete with endogenous drive w0. A partial agonist can increase or decrease activity relative to that baseline; occupancy is not a fixed blocking percentage. The scale K* may be an assay Ki or an explicitly assumed response scale. Ki, Kd, IC50 and EC50 remain distinct. Every efficacy coefficient ε is illustrative.</p>
-<p>Transporters omit w0 from the denominator and report capacity 1−θorth. This general target layer does not compute individual transport cycles or infer transmitter concentration from occupancy.</p>
+<p>Orthosteric ligands compete with estimated endogenous drive w0. A partial agonist can increase or decrease activity relative to that baseline; occupancy is not a fixed blocking percentage. Binding occupancy uses a Ki-based approximation where available; assumed K* scales remain labeled binding proxies. Legacy efficacy coefficients ε remain illustrative only where a functional assay curve is unavailable. The profile identifies which path is used.</p>
+<p>Transporter capacity uses sourced uptake-inhibition curves when available and an occupancy-based fallback otherwise. Binding and uptake inhibition are distinct outputs. This general target layer does not compute individual transport cycles or infer transmitter concentration from occupancy.</p>
 <code>θPAM = ΣwPAM/(1 + ΣwPAM)<br>θchannel = Σwchannel/(1 + Σwchannel)<br>A = min(1, Aorth · (1 + 2θPAM)) · (1 − θchannel)</code>
-<p>PAMs and channel blockers occupy separate pools. The fixed PAM gain of 2 amplifies existing activity; it is not a measured efficacy. Channel reduction omits voltage and use dependence. Combined occupancy is the union-of-pools proxy 1−(1−θorth)(1−θPAM)(1−θchannel), not one physical binding-site fraction.</p>
+<p>PAMs and channel blockers occupy separate pools. The equations above describe the fallback pathway: a PAM without a functional assay uses the estimated gain of 2. Sourced functional modulation replaces that gain where supplied. Channel reduction omits voltage and use dependence. Combined occupancy is the union-of-pools proxy 1−(1−θorth)(1−θPAM)(1−θchannel), not one physical binding-site fraction.</p>
 <h3>Metabolic combinations</h3>
 <p>Sourced CYP2D6 inhibitor and substrate identities select the represented interaction. Its magnitude uses w = Σ free inhibitor plasma / 100 nM and clearance multiplier 1−0.5w/(1+w). Both 100 nM and 0.5 are assumptions. A plausible exposure direction is not a calibrated clinical magnitude; enzyme fractions, genetics, active metabolites and adaptation are omitted.</p>
 <h3>Neural milliseconds are a separate clock</h3>
 <code>dv/dt = 0.04v² + 5v + 140 − u + I<br>du/dt = a(bv − u)<br>v ≥ 30 ⇒ v ← c; u ← u + d</code>
-<p>The ${link(izhikevich)} point-neuron equations run at a <strong>0.25 ms neural step</strong>, using two voltage half-steps. The default circuit has 32 excitatory and 8 inhibitory units; synaptic currents decay over 5 ms and 10 ms. A matched control shares seeded background noise and topology. Rate summaries use a rolling one-second neural window.</p>
-<p>Target activity changes drive hand-chosen current shifts and synaptic gains. This entire mapping is <strong>phenomenological and uncalibrated</strong>, not derived from binding assays or human electrophysiology. Simulated firing has no validated interpretation as mood, subjective intensity, cognition or a clinical effect.</p>
+<p>The ${link(izhikevich)} point-neuron equations run at a <strong>0.25 ms neural step</strong>, using two voltage half-steps. The default circuit has 32 excitatory and 8 inhibitory units. A matched control shares seeded background noise and topology. Rate summaries use a rolling one-second neural window.</p>
+<p><strong>Direct electrophysiology reference:</strong> the diazepam pathway changes inhibitory synaptic decay using published spontaneous inhibitory postsynaptic current (sIPSC) measurements in cultured rat neurons. The measured durations replace an arbitrary fixed inhibitory gain for that pathway. Its concentration interpolation, single-exponential approximation and transfer to this small network are estimated; this is not a human dose-response curve.</p>
+${neuralReferenceContent()}
+<p>Other target-to-current shifts, synaptic gains, network connectivity, regional weights and cognitive mappings remain <strong>estimated and uncalibrated</strong>. A research-supported receptor endpoint does not establish how much a human neuron's firing rate changes. Simulated firing has no validated interpretation as mood, subjective intensity, cognition or a clinical effect.</p>
 <p>Playback advances in fixed 0.05-second application ticks. Separate controls map those ticks to PK hours and neural milliseconds; they are not one physical timescale. Rendering and camera motion do not determine either numerical integration step.</p>
 <h3>Geometry and missing kinetics</h3>
 <p>PubChem structures preserve sourced coordinates and connectivity; computed conformers are not measured solution ensembles or receptor-bound poses. The brain cortex is MRI-derived; other anatomical meshes, vessels, neuron shapes, regional positions and functional connections are schematic. The BBB scene is a separate magnified scale. Circulating tracer counts and trajectories are illustrative and do not compute drug amounts.</p>
@@ -102,7 +159,7 @@ export function profileContent(profile = {}) {
   const enzymeNames = values => array(values).map(v => e(typeof v === 'string' ? v : v?.enzyme || 'Unknown')).join(', ') || 'None represented';
   const targetDetails = targets.map(t => `<h3>${e(targetNames[t.target] || t.target)}</h3><p>${pill(t.modelAssumption ? 'Assumed affinity scale' : t.evidenceType || t.evidence?.type)} ${e(actionNames[t.action] || t.action)}${t.subtype ? ` · ${e(t.subtype)}` : ''}</p>
 <p><strong>${e(t.affinityLabel || 'K* · unverified model scale')}: ${number(t.kiNM)} nM.</strong></p>${evidence(t.evidence, sources)}
-<p>Model efficacy coefficient: ${number(t.efficacy)}. ${t.action === 'pam' ? 'The current engine uses a separate fixed PAM gain; this profile coefficient is not used as measured amplification.' : 'This coefficient is illustrative even when the binding affinity is experimentally sourced.'}</p>${t.efficacyEvidence ? evidence(t.efficacyEvidence, sources) : ''}`).join('');
+${t.functionalAssay ? functionalAssayContent(t.functionalAssay,sources,{custom:profile.custom}) : `<p>${pill('Estimated functional response')} Model efficacy coefficient: ${number(t.efficacy)}. ${t.action === 'pam' ? 'Without a functional assay, the engine uses a separate estimated PAM gain of 2; this profile coefficient is not measured amplification.' : 'This fallback coefficient is illustrative even when the binding affinity is experimentally sourced.'}</p>${t.efficacyEvidence ? evidence(t.efficacyEvidence, sources) : ''}`}`).join('');
   const pkDetails = pk ? [ ['halfLifeH','Selected half-life','h'], ['freeFraction','Unbound plasma fraction',''], ['brainPartition','Unbound partition Kp,uu',''], ['brainEquilibrationH','Equilibration τ','h'] ].map(([key,name,unit]) => `<h3>${e(name)} · ${number(pk[key])}${unit ? ` ${e(unit)}` : ''}</h3>${evidence(pk.evidence?.[key], sources)}`).join('')
     : `<div class="callout"><p>${e(profile.qualitativeExposureNote || 'No acute pharmacokinetic values are assigned. Brain concentration and time course are unknown, not assumed zero.')}</p></div>`;
   return `<h2>${e(profile.name || 'Compound profile')}</h2><p>${e(profile.class || 'Molecular identity and model evidence')}</p>
@@ -116,6 +173,7 @@ ${array(profile.aliases).length ? `<p>Recognized names: ${profile.aliases.map(e)
 <h3>Target evidence</h3>${targets.length ? `${targetDetails}<p>Ki, Kd, uptake IC50 and activation EC50 are distinct. Species, assay and receptor context affect interpretation. Occupancy is not a clinical response.</p>` : `<p>${qualitative ? 'No acute neurotransmitter-receptor mechanism is assigned to this cofactor pathway.' : 'No supported target profile is supplied. Identity alone does not determine affinity or efficacy.'}</p>`}
 <h3>Exposure parameters</h3>${pkDetails}${profile.defaultExposureEvidence ? `<p>${e(profile.defaultExposureEvidence)}</p>` : ''}
 ${profile.metabolism ? `<h3>Metabolism</h3><p>Substrate pathways: ${enzymeNames(profile.metabolism.substrate)}. Inhibition: ${enzymeNames(profile.metabolism.inhibits)}.</p>${evidence(profile.metabolism.evidence,sources)}${profile.metabolism.fractionalClearanceEvidence ? evidence(profile.metabolism.fractionalClearanceEvidence,sources) : ''}` : ''}
+${targets.some(t => t.neuralCalibrationId === DIAZEPAM_NEURAL_CALIBRATION.id) ? neuralReferenceContent() : ''}
 ${array(profile.pathway).length ? `<h3>Qualitative cofactor pathway</h3><div class="callout"><p>These stages have no assigned durations, transport constants or neural repair rates. Plasma exposure does not establish brain delivery; this diagram does not drive an acute firing effect.</p></div><ol>${profile.pathway.map(stage => `<li><strong>${e(stage.stage)}</strong><p>${e(stage.description)}</p>${refs(stage.sourceIds,sources)}</li>`).join('')}</ol>` : ''}
 ${array(profile.notes).length ? `<h3>Interpretation</h3><ul>${profile.notes.map(note => `<li>${e(note)}</li>`).join('')}</ul>` : ''}
 ${sources.length ? `<h3>Profile sources</h3><ul>${unique(sources).map(s => `<li>${link(s)}</li>`).join('')}</ul>` : ''}`;
@@ -131,25 +189,32 @@ export function targetContent(state, catalog) {
   const find = c => { const profile = profiles.find(p => p.id === c.id); return { profile, target:array(profile?.targets).find(t => t.target === state.id && t.action === c.action) }; };
   const contributionRows = contributors.map(c => { const {profile,target} = find(c); return `<tr><td>${e(c.name || profile?.name || c.id)}<br>${pill(target?.modelAssumption ? 'Assumed affinity' : target?.evidenceType)}</td><td>${e(actionNames[c.action] || c.action)}<br>${e(c.site)}</td><td>${e(target?.affinityLabel || 'K* · unverified scale')}<br>${number(c.affinityNM)} nM</td><td>${percent(c.occupancy)}</td></tr>`; }).join('');
   const notes = contributors.map(c => { const {profile,target} = find(c); return target ? `<p><strong>${e(profile.name)}:</strong> ${e(target.evidence?.note || 'Evidence not supplied.')}</p>${refs(target.evidence?.sourceIds,profile.sources)}` : ''; }).join('');
+  const functionalResponses = array(state.functionalResponses);
+  const assayDetails = functionalResponses.map(response => {
+    const profile = profiles.find(p => p.id === response.id);
+    return `<h3>${e(response.name || profile?.name || response.id)} · functional response</h3><p>${e(response.evidenceBasis || 'Review assay provenance; transfer to brain activity remains estimated.')}</p>${functionalAssayContent(response.assay,profile?.sources,{custom:profile?.custom || response.evidenceBasis?.startsWith('User-supplied'),concentrationNM:response.concentrationNM,assayResponse:response.assayResponse})}`;
+  }).join('');
   return `<h2>${e(targetNames[state.id] || state.id)}</h2><p>${e(state.interpretation || (transporter ? 'Fractional transporter capacity.' : 'Illustrative receptor activity, distinct from occupancy.'))}</p>
 <table><tbody>${rows([
     [transporter ? 'Available transport capacity' : 'Activity proxy',percent(state.activity)], ['Matched no-drug baseline',percent(state.baselineActivity)],
     ['Change from baseline',`${Number.isFinite(state.delta) && state.delta > 0 ? '+' : ''}${number(Number.isFinite(state.delta) ? state.delta * 100 : NaN)} percentage points`],
     ['Orthosteric drug occupancy',percent(state.orthostericOccupancy)], ['Allosteric-site occupancy',percent(state.allostericOccupancy)], ['Channel-blocker occupancy',percent(state.channelOccupancy)], ['Endogenous drive w0',number(state.endogenousDrive)],
   ])}</tbody></table>
-<div class="callout"><p>${transporter ? 'Capacity falls with orthosteric drug occupancy in a substrate-free approximation. This number does not compute transmitter concentration.' : 'Occupancy and activation differ. Partial agonists can raise or lower activity against endogenous drive. PAMs amplify existing activity at a separate site; channel blockers reduce it separately.'} Efficacy and target-to-network coupling coefficients are illustrative.</p></div>
+<div class="callout"><p><strong>Response basis:</strong> ${e(state.responseBasis || 'Estimated binding-to-activity mapping')}.</p><p><strong>Occupancy evidence:</strong> ${e(state.occupancyEvidence || 'Binding-affinity approximation or explicitly assumed binding scale')}.</p><p>${transporter ? 'Sourced uptake inhibition and binding occupancy are distinct. The capacity proxy does not compute transmitter concentration.' : 'Occupancy and activation differ. Partial agonists can raise or lower activity against endogenous drive. PAMs amplify existing activity at a separate site; channel blockers reduce it separately.'} Assay-to-brain transfer, mixture pooling and target-to-network coupling remain estimates.</p></div>
+${assayDetails}
 ${contributors.length ? `<h3>Contributors at the current modeled brain exposure</h3><table><thead><tr><th>Compound / evidence</th><th>Action / site</th><th>Affinity scale</th><th>Site occupancy</th></tr></thead><tbody>${contributionRows}</tbody></table><p>Fractions from separate site pools cannot be added as one physical site occupancy. A zero-occupancy contributor may simply have zero current modeled brain exposure.</p>${notes}` : '<p>No selected compound contributes a supported mechanism here. Activity follows endogenous baseline; unlisted interactions remain outside the model.</p>'}`;
 }
 
 export function sourcesContent(catalog) {
   const sources = unique([...array(catalog?.sources), ...compounds(catalog).flatMap(p => array(p.sources)), izhikevich,
+    {title:DIAZEPAM_NEURAL_CALIBRATION.citation,url:DIAZEPAM_NEURAL_CALIBRATION.sourceUrl},
     {title:'Wilson & Cowan (1972), Excitatory and inhibitory interactions in localized populations of model neurons',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC1484078/'},
     {title:'Nilearn fsaverage5 reference surfaces',url:'https://nilearn.github.io/dev/modules/description/fsaverage5.html'},
     {title:'Yeo et al. (2011), Organization of human cerebral cortex estimated by intrinsic functional connectivity',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC3174820/'},
     {title:'WebLLM browser inference documentation',url:'https://webllm.mlc.ai/docs/'}]);
-  return `<h2>Evidence you can trace.</h2><p>Molecular identity, assay affinity, parameter assumptions and illustrative neural coupling are separate claims. A source supports its stated evidence; it does not validate the whole simulation. Sources below are deduplicated by URL.</p>
+  return `<h2>Evidence you can trace.</h2><p>Molecular identity, binding affinity, functional assay endpoints, synaptic recordings and estimated neural coupling are separate claims. A source supports its stated evidence; it does not validate the whole simulation. Sources below are deduplicated by URL.</p>
 ${catalog?.retrieved ? `<p>Catalog retrieval: ${e(catalog.retrieved)}.</p>` : ''}
-<div class="callout"><p>Published Ki values retain their assay context. Illustrative K* scales, efficacy coefficients and assumed brain-distribution parameters are identified in each profile. Unknown values stay unknown. PubChem provides computed conformers or explicitly labeled 2D drawings.</p></div>
+<div class="callout"><p>Published Ki, functional EC50/IC50 and Emax values retain their experimental context. Profiles distinguish measured parameters from estimated Hill slopes, baseline and mixture rules, fallback efficacy, and brain-distribution settings. The circuit has a direct rat-culture synaptic reference for diazepam; other current gains and the regional/cognitive mappings remain estimates. Unknown values stay unknown. PubChem provides computed conformers or explicitly labeled 2D drawings.</p></div>
 <ol>${sources.map(s => `<li><p>${link(s)}${s.type ? `<br>${e(s.type)}` : ''}</p></li>`).join('')}</ol>
-<p>The Izhikevich paper supports reduced spiking equations. The drug-to-circuit mapping is this app's modeling choice, not a finding of that paper. Biological sources and software tests do not establish clinical predictive accuracy.</p>`;
+<p>The Izhikevich paper supports reduced spiking equations. Applying receptor-assay curves and selected rat-culture synaptic measurements to this circuit is a separate modeling choice. Biological sources and software tests do not establish clinical predictive accuracy.</p>`;
 }

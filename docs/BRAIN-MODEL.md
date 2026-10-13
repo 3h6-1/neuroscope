@@ -33,7 +33,7 @@ A comparison population receives exactly the same starting state, noise and curr
 
 ## From targets to regional dynamics
 
-The PK/PD layer supplies receptor activity changes Δ and transporter blockade B = 1 − activity. Each region has assumed relative weights d for the ten modeled target families. Define G = d_GABAA max(0, Δ_GABAA) and N = d_NMDA max(0, −Δ_NMDA). The exact default transfer rules are:
+The PK/PD layer supplies receptor activity changes Δ and transporter blockade B = 1 − activity. Selected activity proxies now use measured functional EC50/IC50 and assay maxima, separately from binding affinity. Their transfer to endogenous brain activity remains an estimate. The rat-culture diazepam synaptic-decay calibration applies to the separate spiking circuit, not these regional populations. Each region still has assumed relative weights d for the ten modeled target families. Define G = d_GABAA max(0, Δ_GABAA) and N = d_NMDA max(0, −Δ_NMDA). The exact default transfer rules are:
 
 ```text
 bE = clip(0.2 d_SERT B_SERT + 0.5 d_DAT B_DAT + 0.5 d_NET B_NET

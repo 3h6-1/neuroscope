@@ -35,13 +35,13 @@ test('fixed controller ticks are independent of render-frame partitions', () => 
   assert.equal(a.advance(0), 0);
 });
 
-test('mixture binding load drives the legacy SERT reservoir; withdrawal preserves the clocks', () => {
+test('mixture functional capacity drives the legacy SERT reservoir; withdrawal preserves the clocks', () => {
   const e = make();
   e.addExposure('escitalopram', 100); e.addExposure('fluoxetine', 100); e.addExposure('aripiprazole', 100);
   e.advance(2);
-  const load = e.pk.stats.targets.SERT.contributors.reduce((sum, c) => sum + c.weight, 0);
-  assert.ok(load > 0);
-  assert.equal(e.synapse.params.drugConcentration, load);
+  const capacity = e.pk.stats.targets.SERT.activity;
+  assert.ok(capacity > 0 && capacity < 1);
+  assert.ok(Math.abs(1 / (1 + e.synapse.params.drugConcentration) - capacity) < 1e-12);
   const t = e.timeSeconds;
   assert.equal(e.removeExposure('aripiprazole'), true);
   assert.equal(e.pk.stats.exposures.length, 2);

@@ -76,7 +76,13 @@ test('every modeled parameter distinguishes empirical support from assumptions',
     assert.ok(c.pk.freeFraction >= 0 && c.pk.freeFraction <= 1);
     assert.ok(c.pk.brainPartition > 0 && c.pk.brainEquilibrationH > 0);
     for (const key of ['halfLifeH', 'freeFraction', 'brainPartition', 'brainEquilibrationH']) checkEvidence(c.pk.evidence[key]);
-    assert.equal(c.pk.evidence.brainPartition.type, 'illustrative');
+    if (c.id === 'bupropion') {
+      assert.equal(c.pk.brainPartition, 1.9);
+      assert.equal(c.pk.evidence.brainPartition.type, 'animal-model-derived');
+      assert.match(c.pk.evidence.brainPartition.note, /rat/i);
+      assert.match(c.pk.evidence.brainPartition.note, /human/i);
+      assert.ok(c.pk.evidence.brainPartition.sourceIds.length);
+    } else assert.equal(c.pk.evidence.brainPartition.type, 'illustrative');
     assert.equal(c.pk.evidence.brainEquilibrationH.type, 'illustrative');
   }
 });
