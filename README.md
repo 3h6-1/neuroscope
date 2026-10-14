@@ -180,3 +180,9 @@ docs/BRAIN-ANATOMY.md    Cortical geometry provenance, coordinates and licenses
 docs/DIALOGUE.md         Optional language model and deterministic inspector behavior
 docs/VALIDATION.md       Experimental comparisons, calibration boundaries and known discrepancies
 ```
+
+## License
+
+NeuroScope’s original source code and documentation are licensed under the [MIT License](LICENSE).
+
+Third-party dependencies and bundled datasets retain their respective licenses and attribution requirements. In particular, `public/data/regional-receptors.json` remains **CC BY-NC-SA 4.0**, including its noncommercial restriction; see [regional data attribution and license](docs/REGIONAL-DATA-LICENSE.md). Cortical geometry provenance and licensing are documented in [Brain Anatomy](docs/BRAIN-ANATOMY.md). The MIT license does not replace these third-party terms.
