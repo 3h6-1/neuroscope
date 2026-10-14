@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "title": "Enzyme inhibition assays and human interaction references",
+  "retrieved": "2026-10-13",
+  "scope": "Measured in-vitro inhibitor constants, explicitly derived clearance fractions, and separate human study observations. No clinical combination prediction.",
+  "inhibitionAssays": [
+    {
+      "id": "bupropion-cyp2d6-2025",
+      "compoundId": "bupropion",
+      "enzyme": "CYP2D6",
+      "species": "human",
+      "system": "Pooled human liver microsomes; dextromethorphan O-demethylation; competitive inhibition fit",
+      "evidenceType": "in-vitro measurement",
+      "components": [
+        {
+          "label": "Racemic bupropion parent",
+          "kiNM": 12650,
+          "microsomalUnboundFraction": 1,
+          "bindingEvidence": "Approximation to measured near-unity microsomal unbound fractions; paper reports negligible binding correction (Supplemental Table 2).",
+          "parentFraction": 1,
+          "fractionEvidence": "Racemic parent assay; no metabolite allocation."
+        }
+      ],
+      "sourceIds": ["tanaudommongkon-2025"],
+      "assumptions": [
+        "Free plasma is a proxy for hepatic inhibitor concentration; no hepatic accumulation is simulated.",
+        "The catalog plasma free fraction is retained; this is not a reproduction of the study's plasma-binding experiment.",
+        "The hydroxy-, threo-, and erythrohydrobupropion metabolites are omitted. Parent-only inhibition can severely underrepresent the clinical interaction."
+      ]
+    },
+    {
+      "id": "fluoxetine-cyp2d6-2014",
+      "compoundId": "fluoxetine",
+      "enzyme": "CYP2D6",
+      "species": "human",
+      "system": "Pooled human liver microsomes from six donors; dextromethorphan O-demethylation; reversible inhibition",
+      "evidenceType": "in-vitro measurement plus estimated enantiomer mixture",
+      "components": [
+        {
+          "label": "R-fluoxetine parent",
+          "kiNM": 860,
+          "microsomalUnboundFraction": 0.48,
+          "bindingEvidence": "Table 2 footnote m explicitly identifies total Ki and incubation fraction unbound; unbound Ki is their product, applied once.",
+          "parentFraction": 0.5,
+          "fractionEvidence": "Estimated equal share of the modeled unbound racemic parent pool; stereoselective disposition is not modeled."
+        },
+        {
+          "label": "S-fluoxetine parent",
+          "kiNM": 68,
+          "microsomalUnboundFraction": 0.52,
+          "bindingEvidence": "Table 2 footnote m explicitly identifies total Ki and incubation fraction unbound; unbound Ki is their product, applied once.",
+          "parentFraction": 0.5,
+          "fractionEvidence": "Estimated equal share of the modeled unbound racemic parent pool; stereoselective disposition is not modeled."
+        }
+      ],
+      "sourceIds": ["sager-2014"],
+      "assumptions": [
+        "Free plasma substitutes for unbound hepatic exposure; the catalog parent free fraction is retained.",
+        "The 50:50 unbound R:S split is assumed, not a measured steady-state enantiomer ratio.",
+        "Norfluoxetine, time-dependent enzyme effects, induction, and nonlinear self-inhibition are not dynamically modeled."
+      ]
+    }
+  ],
+  "clearanceModels": [
+    {
+      "id": "aripiprazole-cyp2d6-derived",
+      "compoundId": "aripiprazole",
+      "enzyme": "CYP2D6",
+      "observedAUCR": 2.12,
+      "derivation": "fraction = 1 - 1 / observedAUCR",
+      "evidenceType": "derived estimate, not measured fraction metabolized",
+      "sourceIds": ["abilify-label-ddi"],
+      "assumptions": [
+        "Treat quinidine blockade of CYP2D6 as complete and selective and assume unchanged bioavailability and other clearance routes.",
+        "Incomplete blockade would imply a higher true fraction; this derived fraction is not a measured individual parameter.",
+        "Transfer an oral parent-drug AUC ratio to the simulation's plasma clearance; active dehydro-aripiprazole is omitted."
+      ]
+    },
+    {
+      "id": "lsd-cyp2d6-derived",
+      "compoundId": "lsd",
+      "enzyme": "CYP2D6",
+      "observedAUCR": 1.76,
+      "observedAUCR90CI": [1.44, 2.14],
+      "derivation": "fraction = 1 - 1 / observedAUCR",
+      "evidenceType": "derived estimate, not measured fraction metabolized",
+      "sourceIds": ["becker-2025"],
+      "assumptions": [
+        "Use the normal-metabolizer subgroup, not the pooled all-genotype ratio, and treat paroxetine inhibition as complete and selective.",
+        "Assume unchanged oral bioavailability and residual clearance when transferring the AUC ratio to plasma elimination.",
+        "The transformed study interval covers sampling uncertainty only; it does not cover the complete-blockade assumption or cross-inhibitor transfer."
+      ]
+    }
+  ],
+  "clinicalReferences": [
+    {
+      "id": "aripiprazole-quinidine-observation",
+      "compoundIds": ["aripiprazole", "quinidine"],
+      "triggerCompoundIds": ["aripiprazole"],
+      "title": "Aripiprazole + quinidine: human reference",
+      "endpoint": "Parent aripiprazole plasma AUC",
+      "observedAUCR": 2.12,
+      "result": "Parent AUC increased 112%; active-metabolite AUC decreased 35%.",
+      "regimen": "Study protocol: aripiprazole 10 mg once with quinidine 166 mg/day for 13 days.",
+      "population": "Human interaction study summarized in ABILIFY prescribing information.",
+      "applicability": "Quinidine is a reference inhibitor, not an added exposure. Its observed AUC ratio informs a derived clearance fraction, not a predicted AUC for the current mixture.",
+      "sourceIds": ["abilify-label-ddi"]
+    },
+    {
+      "id": "lsd-paroxetine-observation",
+      "compoundIds": ["lsd", "paroxetine"],
+      "triggerCompoundIds": ["lsd"],
+      "title": "LSD + paroxetine: human reference",
+      "endpoint": "LSD plasma AUC in CYP2D6 normal metabolizers",
+      "observedAUCR": 1.76,
+      "observedAUCR90CI": [1.44, 2.14],
+      "result": "Normal-metabolizer subgroup AUC ratio 1.76 (90% CI 1.44–2.14); whole-cohort ratio was approximately 1.5.",
+      "regimen": "Study protocol: LSD 100 µg once after paroxetine 10 mg/day for 7 days then 20 mg/day for 35 days, versus placebo pretreatment.",
+      "population": "Randomized crossover trial in 23 healthy adults; CYP2D6 normal-metabolizer subgroup n = 11.",
+      "applicability": "Paroxetine is a reference inhibitor, not an added exposure. Higher AUC does not imply proportionately stronger subjective effects or apply as a multiplier to another SSRI.",
+      "sourceIds": ["becker-2025"]
+    },
+    {
+      "id": "bupropion-desipramine-observation",
+      "compoundIds": ["bupropion", "desipramine"],
+      "triggerCompoundIds": ["bupropion"],
+      "title": "Bupropion + desipramine: human reference",
+      "endpoint": "Desipramine plasma AUC",
+      "observedAUCR": 5,
+      "result": "Approximately fivefold AUC and twofold peak concentration; interaction persisted after bupropion was stopped.",
+      "regimen": "Study protocol: repeated bupropion 150 mg twice daily, then desipramine 50 mg once.",
+      "population": "15 male CYP2D6 extensive metabolizers, ages 19–35, summarized in prescribing information.",
+      "applicability": "Desipramine is not an added exposure. This includes metabolite effects; a small parent-only calculated effect must not be read as a small clinical interaction.",
+      "sourceIds": ["bupropion-label-ddi"]
+    },
+    {
+      "id": "fluoxetine-diazepam-observation",
+      "compoundIds": ["fluoxetine", "diazepam"],
+      "triggerCompoundIds": ["fluoxetine", "diazepam"],
+      "title": "Fluoxetine + diazepam: observed interaction",
+      "endpoint": "Diazepam disposition and psychomotor response",
+      "result": "Diazepam AUC and half-life increased and clearance decreased; no significant change in the measured psychomotor response.",
+      "regimen": "Study protocol: diazepam 10 mg once, alone, after fluoxetine 60 mg once, and after eight daily fluoxetine administrations.",
+      "population": "Six healthy participants; within-subject pharmacokinetic study.",
+      "applicability": "Qualitative study direction is displayed only. No numeric multiplier is inferred from the abstract or applied to this mixture; active-metabolite compensation and CYP2C19/CYP3A4 mechanisms are omitted.",
+      "sourceIds": ["lemberger-1988"]
+    },
+    {
+      "id": "escitalopram-desipramine-observation",
+      "compoundIds": ["escitalopram", "desipramine"],
+      "triggerCompoundIds": ["escitalopram"],
+      "title": "Escitalopram + desipramine: human reference",
+      "endpoint": "Desipramine plasma AUC",
+      "observedAUCR": 2,
+      "result": "Desipramine AUC increased 100% and peak concentration increased 40%.",
+      "regimen": "Study protocol: escitalopram 20 mg/day for 21 days with desipramine 50 mg once.",
+      "population": "Human interaction study summarized in escitalopram prescribing information.",
+      "applicability": "The catalog omits this weak-inhibition concentration curve. Desipramine is a reference probe, not an added exposure; its twofold AUC is not transferred to another substrate.",
+      "sourceIds": ["escitalopram-label-ddi"]
+    }
+  ],
+  "limitations": [
+    "These calculations cover selected reversible parent-drug CYP2D6 effects only. Metabolites, liver accumulation, enzyme turnover, induction and genotype-specific kinetics are not modeled.",
+    "Observed study AUC ratios are evidence cards; they are never concentration-independent multipliers of another drug's time course.",
+    "Self-inhibition is omitted because the supplied terminal half-lives already reflect clinical parent-drug disposition and no calibrated nonlinear self-inhibition model is available.",
+    "A factor of one for an unsupported pathway means no change was calculated, not evidence of no interaction.",
+    "Binding competition is separate from enzyme competition. Functional-response pooling, baseline transmitter levels, cross-assay transfer and clinical consequences remain estimated."
+  ],
+  "sources": [
+    {"id": "tanaudommongkon-2025", "title": "Tanaudommongkon et al. (2025), CYP2D6 inhibition by bupropion and metabolites, Table 1 and Supplemental Table 2", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13095643/", "doi": "10.1016/j.dmd.2025.100070"},
+    {"id": "sager-2014", "title": "Sager et al. (2014), fluoxetine/norfluoxetine interactions, Table 2", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4029899/", "doi": "10.1038/clpt.2014.50"},
+    {"id": "abilify-label-ddi", "title": "ABILIFY prescribing information: quinidine interaction study", "url": "https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=634b6431-48ca-480c-a4d8-0ba022bbf0f4&type=display"},
+    {"id": "becker-2025", "title": "Becker et al. (2025), paroxetine–LSD randomized trial, Table 2", "url": "https://ascpt.onlinelibrary.wiley.com/doi/full/10.1002/cpt.3618", "doi": "10.1002/cpt.3618"},
+    {"id": "bupropion-label-ddi", "title": "Bupropion prescribing information: desipramine interaction study", "url": "https://dailymed.nlm.nih.gov/dailymed/getFile.cfm?setid=28fa8921-7546-4681-89ab-9ec32695e701&type=pdf"},
+    {"id": "lemberger-1988", "title": "Lemberger et al. (1988), fluoxetine–diazepam pharmacokinetic and psychomotor study", "url": "https://pubmed.ncbi.nlm.nih.gov/3128416/", "doi": "10.1038/clpt.1988.52"},
+    {"id": "escitalopram-label-ddi", "title": "Escitalopram prescribing information: desipramine interaction study", "url": "https://dailymed.nlm.nih.gov/dailymed/getFile.cfm?setid=7d924d16-8a10-411d-be57-97c450f56de7&type=pdf"}
+  ]
+}

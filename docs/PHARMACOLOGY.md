@@ -1,6 +1,6 @@
 # Brain pharmacology simulator: model and evidence
 
-This is a computational teaching model linking molecular identity, plasma exposure, an unbound brain compartment, selected receptor/transporter interactions and an illustrative spiking network. It is not a digital twin of a person, an all-atom brain simulation, a clinical interaction checker or a predictor of subjective effects. The anatomical meshes, network wiring, receptor densities and drug-to-network coupling are procedural/model choices, not measurements from a specific human brain.
+This is a computational teaching model linking molecular identity, plasma exposure, an unbound brain compartment, selected receptor/transporter interactions and an illustrative spiking network. It is not a digital twin of a person, an all-atom brain simulation, a clinical interaction checker or a predictor of subjective effects. Cortical surfaces and selected receptor spatial maps are sourced reference data. Their anatomical mapping and drug-to-network coupling, other geometry and network wiring remain model choices, not measurements from a specific human brain.
 
 The catalog treats each compound through the same schema and evidence rules. Pharmacology that cannot be represented by the acute model remains explicitly unsupported. Unknown values are not silently treated as measured zeros.
 
@@ -129,16 +129,19 @@ No absorption model, gastrointestinal tract, dose-to-exposure conversion, tissue
 
 ### Metabolic interaction
 
-The catalog lists sourced enzyme identities separately from invented numeric strengths. Bupropion and its metabolites inhibit CYP2D6, while aripiprazole is metabolized through CYP2D6 and CYP3A4. Thus increased aripiprazole parent exposure is a plausible **mechanistic inference** from their labels, not a quantitatively calibrated simulation of that exact combination. [Bupropion label](https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=6563b923-269f-40c3-b992-cbacdfca6e16), [aripiprazole label](https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=569f1c32-fb6f-c34f-0894-4b1e7b744a8a).
+The model now separates measured inhibitor potency, conditionally derived substrate clearance fractions, and observed human-study results. Parent bupropion CYP2D6 Ki is 12,650 nM from human liver microsomes. Fluoxetine uses enantiomer-specific nominal Ki values of 860 and 68 nM, corrected once for incubation binding to 412.8 and 35.36 nM. Equal free parent enantiomer fractions are assumed. See [the interaction research audit](research-interactions.md) for primary sources, assay context and every remaining approximation.
 
-For the demonstration CYP2D6 interaction:
+For selected CYP2D6 substrates:
 
 ```text
-w = Σ inhibitor free-plasma concentration / 100 nM
-clearance multiplier = 1 − 0.5 w/(1+w)
+w = Σ inhibitor components (free-plasma concentration × component fraction / Ki,unbound)
+fm = 1 − 1 / observed human AUC ratio
+clearance multiplier = (1 − fm) + fm / (1+w)
 ```
 
-Both **100 nM** and the **0.5 maximum fraction** are arbitrary, explicitly illustrative model settings. They are not inhibition constants or measured fractions metabolized. The model excludes active bupropion metabolites, time-dependent enzyme effects, phenoconversion, genetics and substrate-specific clearance fractions. Therefore the resulting concentration ratio must not be interpreted as a known clinical magnitude. Fluoxetine's CYP2D6 inhibition is treated by the same schematic rule.
+Aripiprazole's fraction is derived from the 2.12-fold AUC ratio with quinidine; LSD's from the 1.76-fold ratio with paroxetine in a normal-metabolizer subgroup. These fractions assume complete selective inhibition, linear clearance and unchanged bioavailability. Their application to arbitrary virtual plasma exposures is an estimate, not a measured combination effect. Oral-study AUC ratios are never multiplied directly into the current mixture. Free plasma substitutes for liver exposure; active metabolites, genotype, enzyme adaptation and self-inhibition are omitted. Parent-only bupropion inhibition can strongly underrepresent the clinical interaction.
+
+An interaction without both a curated potency and substrate fraction is labeled **unquantified**, and no numerical clearance change is applied. This does not establish absence of an interaction. Human-study cards preserve their actual population, regimen and endpoint separately from current simulation values. The prior shared 100 nM/50% assumptions remain only in imported legacy PK checkpoints, visibly labeled for replay; fresh experiments use the evidence model.
 
 ### Pharmacodynamic combinations
 

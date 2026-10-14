@@ -15,7 +15,7 @@
     "Functional response curves retain experimental species, cell system, endpoint and reference response. Hill slopes, transfer to brain concentration and combination pooling are estimated unless explicitly sourced.",
     "A measured cellular response is not a measured change in human neuron firing or cognition. Receptor reserve, signaling bias and anatomical context can change both magnitude and direction.",
     "Default concentrations are demonstration exposures, not doses or therapeutic targets.",
-    "Metabolism enzyme identities are sourced; any numeric inhibition strength and fractional clearance allocation are model assumptions.",
+    "Selected CYP inhibition constants are measured in vitro; substrate-specific clearance fractions are derived from human AUC ratios under explicit assumptions. Liver exposure, parent-only inhibition and mixture transfer remain estimates. Missing quantitative evidence leaves interactions unmodeled.",
     "Serotonergic interactions are qualitative, context-dependent and cannot be translated to a precise safety or symptom score.",
     "Molecular conformers and structural identity do not validate network-level predictions."
   ],
@@ -110,10 +110,11 @@
           ]
         },
         "fractionalClearanceEvidence": {
-          "type": "illustrative",
-          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "type": "not-quantified",
+          "note": "No quantitative clearance fraction is imported for this substrate. A pathway label alone does not justify a numerical clearance change.",
           "sourceIds": []
-        }
+        },
+        "interactionEvidenceId": "escitalopram"
       },
       "notes": [
         "S-enantiomer. The 3D view uses the separately identified N-protonated ion CID 40466954, C20H22FN2O⁺.",
@@ -180,7 +181,9 @@
             "system": "HEK293T cells expressing recombinant dopamine D2 receptor",
             "species": "Human receptor in a human cell line",
             "reference": "Quinpirole maximum = 100%",
-            "sourceIds": ["aripiprazole-d2-functional"],
+            "sourceIds": [
+              "aripiprazole-d2-functional"
+            ],
             "notes": "Allen et al. 2011, Fig. 2A: pEC50 7.4 ± 0.1; Emax 51 ± 5%; at least two independent experiments. The figure does not identify the error convention, so these errors are not treated as population confidence intervals. Other signaling assays in the same paper differ substantially."
           },
           "evidence": {
@@ -219,7 +222,9 @@
             "system": "CHO cell membranes expressing recombinant human 5-HT1A receptors",
             "species": "Human receptor in Chinese hamster ovary cells",
             "reference": "10 µM serotonin response = 100%",
-            "sourceIds": ["aripiprazole-ht1a-functional"],
+            "sourceIds": [
+              "aripiprazole-ht1a-functional"
+            ],
             "notes": "Jordan et al. 2002, Table 1: pEC50 8.67 ± 0.16 SEM. EC50 = 10^(9 − 8.67) nM, rounded to 2.138 nM. Assay G-protein activation is not a neuronal firing response."
           },
           "evidence": {
@@ -308,10 +313,11 @@
           ]
         },
         "fractionalClearanceEvidence": {
-          "type": "illustrative",
-          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "type": "study-derived-estimate",
+          "note": "CYP2D6 clearance fraction derived from a human inhibitor-study AUC ratio, assuming complete pathway blockade and unchanged bioavailability. See interaction-evidence.json for the study, derivation and limitations. It is not a directly measured fraction metabolized.",
           "sourceIds": []
-        }
+        },
+        "interactionEvidenceId": "aripiprazole"
       },
       "notes": [
         "Partial agonism can increase or decrease a signaling proxy depending on endogenous dopamine; it is not equivalent to simple blockade.",
@@ -386,7 +392,10 @@
             "system": "Rat brain synaptosome uptake assay; racemic parent bupropion",
             "species": "Rat",
             "reference": "Drug-free transporter-specific uptake",
-            "sourceIds": ["bupropion-assay", "bupropion-uptake-table"],
+            "sourceIds": [
+              "bupropion-assay",
+              "bupropion-uptake-table"
+            ],
             "notes": "Damaj et al. 2004 potency, reproduced by the same laboratory in Damaj et al. 2010 Table 1: 1.9 µM = 1900 nM. This functional IC50 does not measure occupancy. Active metabolites are omitted."
           },
           "evidence": {
@@ -427,7 +436,10 @@
             "system": "Rat brain synaptosome uptake assay; racemic parent bupropion",
             "species": "Rat",
             "reference": "Drug-free transporter-specific uptake",
-            "sourceIds": ["bupropion-assay", "bupropion-uptake-table"],
+            "sourceIds": [
+              "bupropion-assay",
+              "bupropion-uptake-table"
+            ],
             "notes": "Damaj et al. 2004 potency, reproduced in Damaj et al. 2010 Table 1. The measured 550 nM uptake IC50 replaces the assumed 1000 nM response scale only in the functional response calculation; neither number is established as binding Ki."
           },
           "evidence": {
@@ -471,7 +483,9 @@
           "brainPartition": {
             "type": "animal-model-derived",
             "note": "Kp,uu,ss = 1.9 is the rat brain extracellular-fluid/unbound-plasma ratio from a population model fitted to microdialysis data. Applying it to this human teaching model is an estimated cross-species transfer; early transport overshoot and active metabolites are omitted.",
-            "sourceIds": ["bupropion-brain-pk"]
+            "sourceIds": [
+              "bupropion-brain-pk"
+            ]
           },
           "brainEquilibrationH": {
             "type": "illustrative",
@@ -495,10 +509,11 @@
           ]
         },
         "fractionalClearanceEvidence": {
-          "type": "illustrative",
-          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "type": "not-quantified",
+          "note": "No quantitative clearance fraction is imported for this substrate. A pathway label alone does not justify a numerical clearance change.",
           "sourceIds": []
-        }
+        },
+        "interactionEvidenceId": "bupropion"
       },
       "notes": [
         "Hydrochloride names normalize to bupropion; chloride is a counterion, not a second neuroactive ingredient.",
@@ -569,8 +584,8 @@
           ]
         },
         "fractionalClearanceEvidence": {
-          "type": "illustrative",
-          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "type": "not-quantified",
+          "note": "No quantitative clearance fraction is imported for this substrate. A pathway label alone does not justify a numerical clearance change.",
           "sourceIds": []
         }
       },
@@ -696,7 +711,9 @@
             "system": "HEK-derived cells expressing recombinant human 5-HT2A receptors",
             "species": "Human receptor in a human cell line",
             "reference": "Serotonin maximum calcium response = 100%",
-            "sourceIds": ["lsd-assay"],
+            "sourceIds": [
+              "lsd-assay"
+            ],
             "notes": "Halberstadt et al. 2020, Table 4: pEC50 8.82 ± 0.05 SEM; 3–5 independent experiments in triplicate. Calcium-flux EC50 differs from the separately measured binding Ki 14.7 nM. β-arrestin recruitment and neuronal firing are not measured by this endpoint."
           },
           "evidence": {
@@ -782,10 +799,11 @@
           ]
         },
         "fractionalClearanceEvidence": {
-          "type": "illustrative",
-          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "type": "study-derived-estimate",
+          "note": "CYP2D6 clearance fraction derived from a human inhibitor-study AUC ratio, assuming complete pathway blockade and unchanged bioavailability. See interaction-evidence.json for the study, derivation and limitations. It is not a directly measured fraction metabolized.",
           "sourceIds": []
-        }
+        },
+        "interactionEvidenceId": "lsd"
       },
       "notes": [
         "The structure is the specified d-lysergide stereoisomer; no isomer substitution is made.",
@@ -911,8 +929,8 @@
           ]
         },
         "fractionalClearanceEvidence": {
-          "type": "illustrative",
-          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "type": "not-quantified",
+          "note": "No quantitative clearance fraction is imported for this substrate. A pathway label alone does not justify a numerical clearance change.",
           "sourceIds": []
         }
       },
@@ -1039,8 +1057,8 @@
           ]
         },
         "fractionalClearanceEvidence": {
-          "type": "illustrative",
-          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "type": "not-quantified",
+          "note": "No quantitative clearance fraction is imported for this substrate. A pathway label alone does not justify a numerical clearance change.",
           "sourceIds": []
         }
       },
@@ -1115,7 +1133,9 @@
             "system": "Wild-type α1β2γ2 GABAA receptors expressed in Xenopus oocytes; −80 mV voltage clamp",
             "species": "Rat receptor subunits in Xenopus oocytes",
             "reference": "Current with 1 µM GABA alone",
-            "sourceIds": ["diazepam-functional"],
+            "sourceIds": [
+              "diazepam-functional"
+            ],
             "notes": "Boileau and Czajkowski 1999, Table 1: EC50 64 ± 15 nM SD, at least 6 oocytes from at least 2 batches. Potentiation depends on GABA concentration and receptor subtype; it is not receptor occupancy or a universal synaptic-current increase."
           },
           "evidence": {
@@ -1180,10 +1200,11 @@
           ]
         },
         "fractionalClearanceEvidence": {
-          "type": "illustrative",
-          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "type": "not-quantified",
+          "note": "No quantitative clearance fraction is imported for this substrate. A pathway label alone does not justify a numerical clearance change.",
           "sourceIds": []
-        }
+        },
+        "interactionEvidenceId": "diazepam"
       },
       "notes": [
         "Positive allosteric modulation is distinct from direct GABA-site agonism.",
@@ -1257,7 +1278,9 @@
             "system": "Recombinant NR1-1a/NR2A in HEK293T cells; −66 mV, 1 mM extracellular Mg2+, 1 mM glutamate, 100 µM glycine",
             "species": "Rat receptor subunits in human HEK293T cells",
             "reference": "Agonist-evoked current under the same Mg2+ and voltage conditions without ketamine",
-            "sourceIds": ["ketamine-functional"],
+            "sourceIds": [
+              "ketamine-functional"
+            ],
             "notes": "Kotermanski and Johnson 2009, Table 1: IC50 5.35 ± 0.34 µM, fit SE, 3–4 cells. At zero Mg2+ the same subtype measured 0.33 ± 0.01 µM. Voltage, Mg2+ and subunit dependence are not dynamically resolved; this curve is one fixed assay condition."
           },
           "evidence": {
@@ -1322,8 +1345,8 @@
           ]
         },
         "fractionalClearanceEvidence": {
-          "type": "illustrative",
-          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "type": "not-quantified",
+          "note": "No quantitative clearance fraction is imported for this substrate. A pathway label alone does not justify a numerical clearance change.",
           "sourceIds": []
         }
       },
@@ -1398,7 +1421,9 @@
             "system": "HEK293 cells stably expressing hSERT; 0.1 µM [3H]5-HT, 2.5 minutes at room temperature, 5-minute inhibitor preincubation",
             "species": "Human transporter in a human cell line",
             "reference": "Drug-free specific uptake; nonspecific uptake determined with 30 µM clomipramine",
-            "sourceIds": ["fluoxetine-functional"],
+            "sourceIds": [
+              "fluoxetine-functional"
+            ],
             "notes": "Scholze et al. 2000, Table 1: uptake IC50 19 ± 2 nM SE, three independent experiments in duplicate or triplicate. This value is distinct from the paper's release EC50 and from binding affinity. Norfluoxetine is not included."
           },
           "evidence": {
@@ -1460,16 +1485,17 @@
         ],
         "evidence": {
           "type": "qualitative-sourced",
-          "note": "CYP2D6 metabolism and inhibition are represented qualitatively. Other pathways, nonlinear kinetics and active norfluoxetine are omitted.",
+          "note": "Parent CYP2D6 inhibition uses enantiomer-specific human liver microsome Ki values from Sager et al. (2014), with an assumed equal free R/S parent split. CYP2D6 metabolism, other pathways, nonlinear kinetics and active norfluoxetine are not fully modeled; see interaction-evidence.json.",
           "sourceIds": [
             "fluoxetine-label"
           ]
         },
         "fractionalClearanceEvidence": {
-          "type": "illustrative",
-          "note": "Any allocation of clearance among listed enzyme pathways is a model assumption, not measured fraction metabolized.",
+          "type": "not-quantified",
+          "note": "No quantitative clearance fraction is imported for this substrate. A pathway label alone does not justify a numerical clearance change.",
           "sourceIds": []
-        }
+        },
+        "interactionEvidenceId": "fluoxetine"
       },
       "notes": [
         "Racemic molecular identity with a representative conformer.",
@@ -1520,7 +1546,7 @@
         }
       ],
       "direction": "possible increased parent-drug exposure",
-      "quantitativeStatus": "qualitative mechanism; numeric model magnitude is illustrative",
+      "quantitativeStatus": "selected parent inhibition constants measured in vitro; substrate clearance fractions study-derived under explicit assumptions; no quantitative estimate for unsupported pairs",
       "sourceIds": [
         "bupropion-label",
         "aripiprazole-label",

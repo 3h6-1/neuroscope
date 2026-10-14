@@ -111,7 +111,7 @@ export function createBrainAnatomy({regions=[],connections=[],surface}={}) {
     const radius=brainstem?2.8:deep?4.1:4.6;
     node.scale.set(radius,deep?radius*0.82:radius,radius);
     node.renderOrder=3;
-    tag(node,region.name||region.id,`${region.role||'Modeled regional population.'} Approximate, unregistered center; marker size is symbolic and receptor weights are assumed.`, 'brain-region',
+    tag(node,region.name||region.id,`${region.role||'Modeled regional population.'} Approximate, unregistered center; marker size is symbolic. Inspect each target's PET reference or estimated fallback; population response remains estimated.`, 'brain-region',
       {regionId:region.id,id:region.id,network:region.network,sourcePosition:[...region.position],receptorDensities:{...region.receptorDensities},baseColor:color,baseScale:node.scale.toArray(),deep,activity:0,delta:0});
     const outline=new THREE.Mesh(ring,new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.52,depthWrite:false}));
     outline.scale.setScalar(1.35);

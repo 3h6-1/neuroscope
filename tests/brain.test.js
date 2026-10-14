@@ -16,7 +16,12 @@ test('regional anatomy is explicit, bilateral where appropriate, and excludes pr
   for (const region of REGIONS) {
     assert.equal(region.position.length, 3);
     assert.ok(region.position.every(Number.isFinite));
-    assert.match(region.densityEvidence, /Assumed/);
+    assert.match(region.densityEvidence, /human PET spatial proxies/);
+    assert.equal(Object.keys(region.regionalEvidence.evidenceByTarget).length, 10);
+    for (const [target, evidence] of Object.entries(region.regionalEvidence.evidenceByTarget)) {
+      assert.equal(region.receptorDensities[target], evidence.weight);
+      assert.ok(['pet-derived', 'estimated'].includes(evidence.type));
+    }
     if (region.id.endsWith('_l')) {
       const counterpart = REGIONS.find(r => r.id === region.id.replace(/_l$/, '_r'));
       assert.equal(counterpart.position[0], -region.position[0]);
@@ -51,7 +56,7 @@ test('bounded E/I relaxation remains finite with strong mixed modulation and ext
   assert.match(brain.stats.interpretation, /not consciousness/);
 });
 
-test('catalog LSD and GABA modulation alter assumed regional dynamics while paired controls remain equal', () => {
+test('catalog LSD and GABA modulation alter PET-weighted regional dynamics while paired controls remain equal', () => {
   const lsd = new BrainSimulation({ seed: 717 }), gaba = new BrainSimulation({ seed: 717 });
   lsd.setTargets(computeTargets([{ id: 'lsd', brainNM: 30 }], catalog));
   gaba.setTargets({ GABAA: { delta: 0.5 } });
@@ -61,6 +66,29 @@ test('catalog LSD and GABA modulation alter assumed regional dynamics while pair
   assert.equal(lsd.stats.baselineActivity, gaba.stats.baselineActivity);
   assert.ok(new Set(lsd.stats.regional.map(r => r.delta.toFixed(4))).size > 5);
   finitePopulations(lsd); finitePopulations(gaba);
+});
+
+test('PET spatial variation changes regional modulation, while unsupported targets keep labeled estimates', () => {
+  const lookup = id => REGIONS.find(r => r.id === id);
+  const frontal = lookup('dlpfc_l'), hippocampus = lookup('hippocampus_l');
+  assert.equal(frontal.regionalEvidence.evidenceByTarget.HT2A.type, 'pet-derived');
+  assert.notEqual(frontal.receptorDensities.HT2A, hippocampus.receptorDensities.HT2A);
+  const modulation = regionalModulation({ HT2A: { delta: 0.1 } });
+  assert.notEqual(modulation.find(r => r.id === frontal.id).excitatoryBias, modulation.find(r => r.id === hippocampus.id).excitatoryBias);
+  assert.equal(lookup('md_thalamus_l').regionalEvidence.evidenceByTarget.HT2A.type, 'estimated');
+  assert.equal(frontal.regionalEvidence.evidenceByTarget.NET.type, 'estimated');
+});
+
+test('old regional checkpoints retain history with a persistent model migration notice', () => {
+  const source = new BrainSimulation(); source.setTargets({ HT2A: { delta: 0.2 } }); source.advance(200);
+  const old = source.snapshot(); delete old.regionalModelRevision;
+  const restored = new BrainSimulation().restore(old);
+  assert.deepEqual(restored.history, old.history);
+  assert.deepEqual(restored.regions, old.regions);
+  assert.match(restored.stats.migrationNote, /Future evolution differs/);
+  const roundtrip = new BrainSimulation().restore(JSON.parse(JSON.stringify(restored.snapshot())));
+  restored.advance(100); roundtrip.advance(100);
+  assert.deepEqual(roundtrip.snapshot(), restored.snapshot());
 });
 
 test('cofactor metadata cannot invent an acute receptor effect', () => {

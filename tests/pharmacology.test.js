@@ -103,17 +103,49 @@ test('GABAA positive allosteric modulation requires endogenous drive', () => {
   assert.equal(withGaba.contributors[0].site, 'allosteric');
 });
 
-test('bupropion CYP2D6 inhibition increases aripiprazole exposure with explicit illustrative assumptions', () => {
+test('measured parent inhibition changes aripiprazole exposure without implying clinical mixture magnitude', () => {
   const solo = new PharmacologySimulation(catalog), mixture = new PharmacologySimulation(catalog);
   solo.addExposure('aripiprazole', 100);
   mixture.addExposure('aripiprazole', 100);
   mixture.addExposure('bupropion', 10000);
+  const initial = mixture.stats.interactions.find(i => i.substrateId === 'aripiprazole');
+  const fm = 1 - 1 / 2.12;
+  const inhibitorFreeNM = 10000 * catalog.compounds.find(p => p.id === 'bupropion').pk.freeFraction;
+  const expectedFactor = 1 - fm + fm / (1 + inhibitorFreeNM / 12650);
+  assert.ok(Math.abs(initial.clearanceFactor - expectedFactor) < 1e-12);
+  assert.equal(initial.evidenceType, 'assay-informed estimate');
   solo.advance(48); mixture.advance(48);
   const ari = mixture.stats.exposures.find(e => e.id === 'aripiprazole');
-  assert.ok(ari.plasmaNM > solo.stats.exposures[0].plasmaNM * 1.05);
-  assert.ok(ari.clearanceFactor < 1 && ari.clearanceFactor >= 0.5);
+  assert.ok(ari.plasmaNM > solo.stats.exposures[0].plasmaNM);
+  assert.ok(ari.clearanceFactor < 1 && ari.clearanceFactor >= 1 - fm);
   assert.ok(mixture.stats.interactions.some(i => i.substrateId === 'aripiprazole' && i.inhibitorIds.includes('bupropion')));
-  assert.ok(mixture.stats.interactions[0].evidence.includes('illustrative'));
+  assert.match(mixture.stats.interactions[0].evidence, /metabolites.*omitted/);
+});
+
+test('missing CYP clearance evidence is visibly unquantified and leaves the numerical PK unchanged', () => {
+  const solo = new PharmacologySimulation(catalog), mixed = new PharmacologySimulation(catalog);
+  solo.addExposure('fluoxetine', 100); mixed.addExposure('fluoxetine', 100); mixed.addExposure('bupropion', 1000);
+  const interaction = mixed.stats.interactions.find(row => row.substrateId === 'fluoxetine');
+  assert.equal(interaction.modeled, false); assert.equal(interaction.clearanceFactor, null);
+  solo.advance(12); mixed.advance(12);
+  assert.equal(mixed.stats.exposures.find(e => e.id === 'fluoxetine').plasmaNM, solo.stats.exposures[0].plasmaNM);
+  assert.ok(mixed.stats.interactionReferences.length > 0);
+});
+
+test('old PK snapshots preserve original interaction coefficients with an explicit legacy notice', () => {
+  const old = new PharmacologySimulation(catalog, { interactionModel: 'legacy-estimated' });
+  old.addExposure('aripiprazole', 100); old.addExposure('bupropion', 1000); old.advance(3);
+  const snapshot = old.snapshot(); delete snapshot.options.interactionModel;
+  const restored = new PharmacologySimulation([]).restore(JSON.parse(JSON.stringify(snapshot)));
+  assert.match(restored.stats.migrationNote, /Legacy interaction model/);
+  assert.match(restored.stats.migrationNote, /reload the page/);
+  assert.match(restored.stats.migrationNote, /Reset retains the imported model/);
+  assert.equal(restored.stats.interactions[0].evidenceType, 'legacy estimate');
+  old.advance(5); restored.advance(5);
+  assert.deepEqual(restored.snapshot(), old.snapshot());
+  const fresh = new PharmacologySimulation(catalog);
+  assert.equal(fresh.options.interactionModel, 'evidence-v1');
+  assert.equal(fresh.options.cypInhibitionI50NM, undefined);
 });
 
 test('CYP-varying fixed-step solution converges when the step is halved', () => {

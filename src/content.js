@@ -1,5 +1,7 @@
 /** All catalog, imported-profile and lookup content is treated as untrusted text. */
 import { DIAZEPAM_NEURAL_CALIBRATION } from './neural-evidence.js';
+import { interactionProfileEvidence } from './interaction-evidence.js';
+import { REGIONAL_ATLAS } from './regional-evidence.js';
 export function escapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
@@ -7,6 +9,7 @@ const e = escapeHTML;
 const array = v => Array.isArray(v) ? v : [];
 const compounds = catalog => Array.isArray(catalog) ? catalog : array(catalog?.compounds);
 const number = v => Number.isFinite(v) ? e(Number(v.toPrecision(3))) : 'Unknown';
+const referenceNumber = v => Number.isFinite(v) ? e(Number(v.toPrecision(6))) : 'Unknown';
 const percent = v => Number.isFinite(v) ? `${number(v * 100)}%` : 'Unknown';
 const pill = text => `<span class="evidence-pill">${e(text || 'Evidence unspecified')}</span>`;
 const actionNames = { inhibitor:'Transporter inhibition', antagonist:'Antagonism', agonist:'Agonism', partial_agonist:'Partial agonism', pam:'Positive allosteric modulation', channel_blocker:'Channel blockade', cofactor:'Cofactor pathway' };
@@ -32,6 +35,97 @@ function evidence(value, sources) {
   return `<p>${pill(value?.type)} ${e(value?.note || 'Evidence not supplied; treat this parameter as unverified.')}</p>${refs(value?.sourceIds, sources)}`;
 }
 const rows = entries => entries.map(([name, html]) => `<tr><th>${e(name)}</th><td>${html}</td></tr>`).join('');
+
+export function regionalEvidenceContent(region = {}) {
+  const provenance = region.regionalEvidence || {}, byTarget = provenance.evidenceByTarget || {};
+  const targets = Object.keys(targetNames);
+  const supported = targets.filter(id => byTarget[id]?.type === 'pet-derived').length;
+  return `<h2>${e(region.name || 'Regional model')} · target evidence</h2>
+<p>${pill(`${supported} of ${targets.length} target weights use PET references`)} ${pill('Population response remains estimated')}</p>
+<div class="callout"><p>Published group-average PET maps inform relative target distribution. The displayed sensitivity weights are dimensionless transformations, not measured receptor density, firing-rate changes or an individual brain scan. Atlas-to-model mapping, normalization and target-to-population effects remain modeling choices.</p></div>
+<p>${e(provenance.summary || region.densityEvidence || 'No matched empirical regional reference is available.')}</p>
+${targets.map(id => {
+    const item = byTarget[id] || {}, empirical = item.type === 'pet-derived';
+    const weight = item.weight ?? region.receptorDensities?.[id];
+    const atlas = array(item.atlasRegions).map(r => `${r.hemisphere ? `${r.hemisphere} · ` : ''}${r.label || r.index}`).join('; ');
+    return `<details class="regional-evidence"><summary><strong>${e(targetNames[id])}</strong><span>${number(weight)} × · ${empirical ? 'PET-derived relative proxy' : 'Estimated fallback'}</span></summary>
+<table><tbody>${rows([
+      ['Model sensitivity weight',`${number(weight)} · dimensionless`],
+      ['Evidence status',e(empirical ? 'PET-derived proxy; transformation estimated' : 'Estimated sensitivity; no matched PET value')],
+      ...(Number.isFinite(item.rawValue) ? [['Atlas reference parcel mean',`${referenceNumber(item.rawValue)} ${e(item.rawUnits || '')}`]] : []),
+      ...(item.parameter ? [['Measured parameter',e(item.parameter)]] : []),
+      ...(atlas ? [['Matched atlas region(s)',e(atlas)]] : []),
+      ...(item.tracer ? [['PET tracer',e(item.tracer)]] : []),
+      ...(item.sampleSize ? [['Source participants',number(item.sampleSize)]] : []),
+      ...(item.normalization ? [
+        ['Normalization · estimated',e(item.normalization.formula || item.normalization)],
+        ...(Number.isFinite(item.normalization.denominator) ? [['Reference mean',`${referenceNumber(item.normalization.denominator)} ${e(item.rawUnits || '')}`]] : []),
+        ...(item.normalization.reference ? [['Reference parcels',e(item.normalization.reference)]] : []),
+      ] : []),
+      ...(item.mappingNote ? [['Mapping assumption',e(item.mappingNote)]] : []),
+    ])}</tbody></table>
+${array(item.limitations).length ? `<ul>${item.limitations.map(note => `<li>${e(note)}</li>`).join('')}</ul>` : `<p>No validated conversion from this sensitivity weight to human neuronal activity is available.</p>`}
+${item.sourceUrl ? `<p>${link({id:item.sourceId,title:item.sourceTitle,url:item.sourceUrl})}${item.dataUrl ? ` · ${link({title:'Original atlas data',url:item.dataUrl})}` : ''}</p>` : ''}</details>`;
+  }).join('')}
+<p>Different tracers and measurement scales cannot be compared as absolute target abundance. Schematic coordinates, network connections, response signs and gains, and cognitive mappings remain uncalibrated estimates. An atlas reference supplies spatial information; it does not establish a drug's regional clinical effect.</p>
+<p class="field-note">${e(REGIONAL_ATLAS.attribution)} ${link({title:`Atlas data license: ${REGIONAL_ATLAS.license}`,url:REGIONAL_ATLAS.licenseUrl})}.</p>`;
+}
+
+function inhibitionAssayContent(assay, sources) {
+  return `<div class="interaction-parameter"><p><strong>${e(assay.enzyme || 'Enzyme')} · ${e(assay.compoundId || 'Inhibitor')}</strong></p>
+${assay.system ? `<p>${e(assay.system)}${assay.species ? ` · ${e(assay.species)}` : ''}.</p>` : ''}
+${Number.isFinite(assay.freePlasmaNM) ? `<p>Current free parent plasma proxy: ${referenceNumber(assay.freePlasmaNM)} nM.</p>` : ''}
+<table><tbody>${array(assay.components).map(component => rows([
+    ['Assayed component',e(component.label || assay.compoundId)],
+    ['Measured nominal inhibition Ki',`${referenceNumber(component.kiNM)} nM`],
+    ...(Number.isFinite(component.microsomalUnboundFraction) ? [['Microsomal unbound fraction',number(component.microsomalUnboundFraction)]] : []),
+    ...(Number.isFinite(component.kiNM) && Number.isFinite(component.microsomalUnboundFraction) ? [['Derived unbound Ki',`${referenceNumber(component.kiNM * component.microsomalUnboundFraction)} nM`]] : []),
+    ...(component.bindingEvidence ? [['Binding-correction evidence',e(component.bindingEvidence)]] : []),
+    ...(Number.isFinite(component.parentFraction) ? [['Assumed share of unbound parent',percent(component.parentFraction)]] : []),
+    ...(component.fractionEvidence ? [['Parent-mixture evidence',e(component.fractionEvidence)]] : []),
+  ])).join('')}</tbody></table>
+${array(assay.assumptions).length ? `<ul>${assay.assumptions.map(note => `<li>${e(note)}</li>`).join('')}</ul>` : ''}${refs(assay.sourceIds,sources)}</div>`;
+}
+
+function clearanceModelContent(model = {}, sources) {
+  return `<div class="interaction-parameter"><p>${pill('Clearance fraction derived under assumptions')}</p><table><tbody>${rows([
+    ...(model.enzyme ? [['Enzyme',e(model.enzyme)]] : []),
+    ['Modeled fraction metabolized',percent(model.fraction)],
+    ...(Number.isFinite(model.observedAUCR) ? [['Study AUC ratio used for derivation',`${number(model.observedAUCR)} ×`]] : []),
+    ...(array(model.derivedFractionStudyInterval).length === 2 ? [['Transformed study interval',`${percent(model.derivedFractionStudyInterval[0])}–${percent(model.derivedFractionStudyInterval[1])}; sampling uncertainty only, not total model uncertainty`]] : []),
+  ])}</tbody></table><p>The conversion f<sub>m</sub> = 1 − 1 / AUC ratio assumes complete pathway inhibition and unchanged bioavailability. It is not a direct measurement of the fraction cleared in this virtual exposure.</p>
+${array(model.assumptions).length ? `<ul>${model.assumptions.map(note => `<li>${e(note)}</li>`).join('')}</ul>` : ''}${refs(model.sourceIds,sources)}</div>`;
+}
+
+export function interactionReferenceContent(reference = {}) {
+  return `<article class="interaction-card observed-reference"><span class="evidence-badge">OBSERVED HUMAN STUDY</span><h3>${e(reference.title || 'Published interaction reference')}</h3>
+<p><strong>${e(reference.endpoint || 'Study endpoint')}: ${e(reference.result || 'See source')}</strong></p>
+${reference.regimen ? `<p><strong>Study regimen:</strong> ${e(reference.regimen)}</p>` : ''}
+${reference.population ? `<p><strong>Participants:</strong> ${e(reference.population)}</p>` : ''}
+<p>${e(reference.applicability || 'Study observation, not current-mixture prediction.')} Different regimens and omitted metabolites can make this differ substantially from the calculated parent-only estimate.</p>
+${refs(reference.sourceIds,reference.sources)}</article>`;
+}
+
+export function interactionEvidenceContent(entry = {}, catalog) {
+  const profiles = compounds(catalog), names = id => profiles.find(p => p.id === id)?.name || id;
+  const modeled = entry.modeled !== false && Number.isFinite(entry.clearanceFactor);
+  const legacy = entry.evidenceType === 'legacy estimate';
+  return `<article class="interaction-card"><span class="evidence-badge assumed">${modeled ? legacy ? 'LEGACY ESTIMATED CLEARANCE' : 'ASSAY-INFORMED ESTIMATE' : 'QUANTITATIVE EFFECT UNMODELED'}</span><h3>${e(entry.enzyme || 'Metabolic')} clearance</h3>
+<p>${e(array(entry.inhibitorIds).map(names).join(' + '))} → ${e(names(entry.substrateId))}</p>
+<p>${modeled ? `Modeled total clearance: <strong>${percent(entry.clearanceFactor)}</strong> of its uninhibited value.` : 'No clearance multiplier is assigned to this pair; missing parameters do not mean no interaction.'} ${e(entry.evidence || '')}</p>
+${entry.partial ? `<p><strong>Incomplete mixture:</strong> ${e(array(entry.unmodeledInhibitorIds).map(names).join(' + '))} ${array(entry.unmodeledInhibitorIds).length === 1 ? 'has' : 'have'} no matched quantitative inhibition model. The displayed factor excludes those contributions.</p>` : ''}
+${array(entry.assays).length || entry.clearanceModel ? `<details data-interaction-detail="${e([entry.substrateId,entry.enzyme,...array(entry.inhibitorIds)].join(':'))}"><summary>Inspect parameters &amp; remaining estimates</summary>${array(entry.assays).map(assay => inhibitionAssayContent(assay,entry.sources)).join('')}${entry.clearanceModel ? clearanceModelContent(entry.clearanceModel,entry.sources) : ''}</details>` : ''}
+<p class="field-note">Free parent plasma is used as an estimated enzyme-site exposure. Active metabolites, time-dependent inhibition and individual variation are not resolved.</p></article>`;
+}
+
+function metabolismProfileContent(profile, sources) {
+  const value = interactionProfileEvidence(profile);
+  const joinedSources = unique([...sources,...array(value?.sources)]);
+  if (!value) return '';
+  return `${array(value.inhibitionAssays).map(assay => inhibitionAssayContent(assay,joinedSources)).join('')}
+${array(value.clearanceModels).map(model => clearanceModelContent(model,joinedSources)).join('')}
+${array(value.clinicalReferences).length ? `<h3>Observed human interaction references</h3><p>These observations retain their study regimen and do not set the current mixture's exposure multiplier. Parent-only calculations can substantially underrepresent effects mediated by active metabolites.</p>${value.clinicalReferences.map(reference => interactionReferenceContent({...reference,sources:unique([...joinedSources,...array(reference.sources)])})).join('')}` : ''}`;
+}
 
 function functionalAssayContent(assay, sources, {custom = false, concentrationNM, assayResponse} = {}) {
   if (!assay || typeof assay !== 'object') return '';
@@ -78,7 +172,7 @@ export function neuralEvidenceContent(modulation = {}, migrationNote) {
   };
   return `<span>INHIBITORY SYNAPTIC DECAY</span><p><strong>${number(modulation.inhibitionDecayMs)} ms</strong> · equivalent exponential τ</p><p>${pill(statuses[value.status] || 'Evidence not supplied')}</p>
 ${Number.isFinite(value.concentrationNM) ? `<p>Brain concentration proxy: ${number(value.concentrationNM)} nM.</p>` : ''}
-<p>Rat-culture reference; transfer to this circuit is estimated. Other current gains, regional effects and cognitive mappings remain estimated.</p>${migrationNote ? `<p class="migration-note"><strong>Imported experiment:</strong> ${e(migrationNote)}</p>` : ''}`;
+<p>Rat-culture reference; transfer to this circuit is estimated. Other current gains and population-response mappings remain estimated. Selected regional target weights use PET references.</p>${migrationNote ? `<p class="migration-note"><strong>Imported experiment:</strong> ${e(migrationNote)}</p>` : ''}`;
 }
 
 export function modelContent(catalog) {
@@ -87,7 +181,10 @@ export function modelContent(catalog) {
 <h3>Anatomy and regional dynamics</h3>
 <p>The cortical surface uses the MRI-derived fsaverage5 reference mesh distributed by Nilearn. Its folds are anatomical geometry. The 30 nonsensory functional nodes and 132 connections are schematic, not registered patient anatomy or a measured connectome. Primary sensory processing is excluded from the dynamics; the intact reference surface still includes those anatomical areas.</p>
 <code>τE dE/dt = −E + σ(10gE E − 8gI I + delayed input + drive + bias + noise − 2.8)<br>τI dI/dt = −I + σ(8gE E − 3I + 0.4 + 0.25drive + bias + 0.7noise − 2.8)<br>σ(x) = 1/(1 + exp(−x))</code>
-<p>Wilson–Cowan-style excitatory/inhibitory populations use τE = 20 ms, τI = 10 ms and a 0.5 ms integration step, with delayed interregional input. Target activity modifies assumed regional gains and biases. The comparison disables direct drug effects while sharing the current cognitive drive and noise: it is not an independent untreated brain.</p>
+<p>Wilson–Cowan-style excitatory/inhibitory populations use τE = 20 ms, τI = 10 ms and a 0.5 ms integration step, with delayed interregional input. Target activity modifies regional gains and biases. Selected relative target weights are derived from group-average human PET atlas values; the conversion into population response remains estimated. The comparison disables direct drug effects while sharing the current cognitive drive and noise: it is not an independent untreated brain.</p>
+<h3>Regional receptor evidence</h3>
+<p>Select a brain region and choose <strong>Inspect regional evidence</strong> to see all ten target weights, their original atlas measurement, tracer, participants, mapped atlas parcels and normalization. PET-derived weights describe relative spatial distribution. They are not direct measurements of neuronal sensitivity, and values from different tracers are not comparable as absolute receptor abundance.</p>
+<p>The atlas-to-model region mapping and normalization are explicit modeling choices. Unmatched targets and regions keep labeled estimated fallbacks; negative or unsupported PET signals are not silently converted into positive receptor density. Schematic network connections, response gains and signs, regional concentration differences, and cognitive mappings remain uncalibrated.</p>
 <h3>The inspectable workspace</h3>
 <p>Text enters directly as symbols, bypassing modeled senses. Memory retrieval uses lexical similarity, strength and recency. Seeded candidate selection creates associations every two playback seconds. The journal exposes candidate scores, selection probabilities, retained memories and explicit attention, retention, flexibility and inhibition parameters. These are program variables, not measured psychological scores or human thoughts.</p>
 <p>Regional activity changes those parameters through documented, unvalidated mappings. This changes memory selection and internal drive. It does not simulate consciousness, full human reasoning, or a person's subjective drug experience.</p>
@@ -113,13 +210,15 @@ export function modelContent(catalog) {
 <code>θPAM = ΣwPAM/(1 + ΣwPAM)<br>θchannel = Σwchannel/(1 + Σwchannel)<br>A = min(1, Aorth · (1 + 2θPAM)) · (1 − θchannel)</code>
 <p>PAMs and channel blockers occupy separate pools. The equations above describe the fallback pathway: a PAM without a functional assay uses the estimated gain of 2. Sourced functional modulation replaces that gain where supplied. Channel reduction omits voltage and use dependence. Combined occupancy is the union-of-pools proxy 1−(1−θorth)(1−θPAM)(1−θchannel), not one physical binding-site fraction.</p>
 <h3>Metabolic combinations</h3>
-<p>Sourced CYP2D6 inhibitor and substrate identities select the represented interaction. Its magnitude uses w = Σ free inhibitor plasma / 100 nM and clearance multiplier 1−0.5w/(1+w). Both 100 nM and 0.5 are assumptions. A plausible exposure direction is not a calibrated clinical magnitude; enzyme fractions, genetics, active metabolites and adaptation are omitted.</p>
+<code>w = Σ Cfree,parent,i · parentFractioni / (Ki,i · fu,mic,i)<br>Clearance multiplier = 1 − fm + fm/(1 + w)<br>Derived fm = 1 − 1/AUC ratio</code>
+<p>Matched pairs use published in-vitro inhibition Ki values and, when reported, microsomal unbound fractions. Published clinical AUC ratios supply selected pathway fractions under the explicit assumptions of complete inhibition, unchanged bioavailability and linear clearance. Those fractions are derived proxies, not directly measured values. Enantiomer shares and transfer from free plasma to the enzyme site remain estimated. Missing quantitative parameters produce an <strong>unmodeled</strong> card instead of an invented potency or an apparent absence of interaction.</p>
+<p>The Interactions panel keeps <strong>observed human study references</strong> separate from the current parent-only calculation, preserving the original regimen and participants. These study ratios are not applied as multipliers to arbitrary virtual exposures. Active inhibitory metabolites, time-dependent inhibition, induction, genetic variation, first-pass changes and adaptation are not resolved. In particular, a small calculated parent-only effect does not negate a larger interaction observed in a repeated-dose human study.</p>
 <h3>Neural milliseconds are a separate clock</h3>
 <code>dv/dt = 0.04v² + 5v + 140 − u + I<br>du/dt = a(bv − u)<br>v ≥ 30 ⇒ v ← c; u ← u + d</code>
 <p>The ${link(izhikevich)} point-neuron equations run at a <strong>0.25 ms neural step</strong>, using two voltage half-steps. The default circuit has 32 excitatory and 8 inhibitory units. A matched control shares seeded background noise and topology. Rate summaries use a rolling one-second neural window.</p>
 <p><strong>Direct electrophysiology reference:</strong> the diazepam pathway changes inhibitory synaptic decay using published spontaneous inhibitory postsynaptic current (sIPSC) measurements in cultured rat neurons. The measured durations replace an arbitrary fixed inhibitory gain for that pathway. Its concentration interpolation, single-exponential approximation and transfer to this small network are estimated; this is not a human dose-response curve.</p>
 ${neuralReferenceContent()}
-<p>Other target-to-current shifts, synaptic gains, network connectivity, regional weights and cognitive mappings remain <strong>estimated and uncalibrated</strong>. A research-supported receptor endpoint does not establish how much a human neuron's firing rate changes. Simulated firing has no validated interpretation as mood, subjective intensity, cognition or a clinical effect.</p>
+<p>Other target-to-current shifts, synaptic gains, network connectivity, unsupported regional weights and cognitive mappings remain <strong>estimated and uncalibrated</strong>. PET-supported regional weights still require estimated normalization and population coupling. A research-supported receptor endpoint does not establish how much a human neuron's firing rate changes. Simulated firing has no validated interpretation as mood, subjective intensity, cognition or a clinical effect.</p>
 <p>Playback advances in fixed 0.05-second application ticks. Separate controls map those ticks to PK hours and neural milliseconds; they are not one physical timescale. Rendering and camera motion do not determine either numerical integration step.</p>
 <h3>Geometry and missing kinetics</h3>
 <p>PubChem structures preserve sourced coordinates and connectivity; computed conformers are not measured solution ensembles or receptor-bound poses. The brain cortex is MRI-derived; other anatomical meshes, vessels, neuron shapes, regional positions and functional connections are schematic. The BBB scene is a separate magnified scale. Circulating tracer counts and trajectories are illustrative and do not compute drug amounts.</p>
@@ -172,7 +271,7 @@ ${array(profile.aliases).length ? `<p>Recognized names: ${profile.aliases.map(e)
 <div class="callout"><p>${e(profile.structureNote || 'Database geometry does not establish a receptor-bound pose or a solution-state ensemble.')}${profile.structureDimension === 2 || profile.unavailable3D ? ' This is a 2D chemical depiction; physical 3D coordinates and cobalt coordination are not inferred.' : ''}</p></div>
 <h3>Target evidence</h3>${targets.length ? `${targetDetails}<p>Ki, Kd, uptake IC50 and activation EC50 are distinct. Species, assay and receptor context affect interpretation. Occupancy is not a clinical response.</p>` : `<p>${qualitative ? 'No acute neurotransmitter-receptor mechanism is assigned to this cofactor pathway.' : 'No supported target profile is supplied. Identity alone does not determine affinity or efficacy.'}</p>`}
 <h3>Exposure parameters</h3>${pkDetails}${profile.defaultExposureEvidence ? `<p>${e(profile.defaultExposureEvidence)}</p>` : ''}
-${profile.metabolism ? `<h3>Metabolism</h3><p>Substrate pathways: ${enzymeNames(profile.metabolism.substrate)}. Inhibition: ${enzymeNames(profile.metabolism.inhibits)}.</p>${evidence(profile.metabolism.evidence,sources)}${profile.metabolism.fractionalClearanceEvidence ? evidence(profile.metabolism.fractionalClearanceEvidence,sources) : ''}` : ''}
+${profile.metabolism ? `<h3>Metabolism</h3><p>Substrate pathways: ${enzymeNames(profile.metabolism.substrate)}. Inhibition: ${enzymeNames(profile.metabolism.inhibits)}.</p>${evidence(profile.metabolism.evidence,sources)}${profile.metabolism.fractionalClearanceEvidence ? evidence(profile.metabolism.fractionalClearanceEvidence,sources) : ''}${profile.custom ? '<p>Custom metabolic parameters are unverified hypotheses; curated interaction evidence is not assigned by compound name.</p>' : metabolismProfileContent(profile,sources)}` : ''}
 ${targets.some(t => t.neuralCalibrationId === DIAZEPAM_NEURAL_CALIBRATION.id) ? neuralReferenceContent() : ''}
 ${array(profile.pathway).length ? `<h3>Qualitative cofactor pathway</h3><div class="callout"><p>These stages have no assigned durations, transport constants or neural repair rates. Plasma exposure does not establish brain delivery; this diagram does not drive an acute firing effect.</p></div><ol>${profile.pathway.map(stage => `<li><strong>${e(stage.stage)}</strong><p>${e(stage.description)}</p>${refs(stage.sourceIds,sources)}</li>`).join('')}</ol>` : ''}
 ${array(profile.notes).length ? `<h3>Interpretation</h3><ul>${profile.notes.map(note => `<li>${e(note)}</li>`).join('')}</ul>` : ''}
@@ -206,7 +305,11 @@ ${contributors.length ? `<h3>Contributors at the current modeled brain exposure<
 }
 
 export function sourcesContent(catalog) {
-  const sources = unique([...array(catalog?.sources), ...compounds(catalog).flatMap(p => array(p.sources)), izhikevich,
+  const sources = unique([...array(catalog?.sources), ...compounds(catalog).flatMap(p => array(p.sources)),
+    ...compounds(catalog).flatMap(profile => interactionProfileEvidence(profile).sources),
+    ...Object.values(REGIONAL_ATLAS.maps).map(map => ({id:map.sourceId,title:map.sourceTitle,url:map.sourceUrl})),
+    {title:'Hansen et al. (2022), human neurotransmitter receptor architecture',url:REGIONAL_ATLAS.citationUrl},
+    {title:`Derived regional PET dataset · ${REGIONAL_ATLAS.license}`,url:REGIONAL_ATLAS.licenseUrl}, izhikevich,
     {title:DIAZEPAM_NEURAL_CALIBRATION.citation,url:DIAZEPAM_NEURAL_CALIBRATION.sourceUrl},
     {title:'Wilson & Cowan (1972), Excitatory and inhibitory interactions in localized populations of model neurons',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC1484078/'},
     {title:'Nilearn fsaverage5 reference surfaces',url:'https://nilearn.github.io/dev/modules/description/fsaverage5.html'},
@@ -214,7 +317,7 @@ export function sourcesContent(catalog) {
     {title:'WebLLM browser inference documentation',url:'https://webllm.mlc.ai/docs/'}]);
   return `<h2>Evidence you can trace.</h2><p>Molecular identity, binding affinity, functional assay endpoints, synaptic recordings and estimated neural coupling are separate claims. A source supports its stated evidence; it does not validate the whole simulation. Sources below are deduplicated by URL.</p>
 ${catalog?.retrieved ? `<p>Catalog retrieval: ${e(catalog.retrieved)}.</p>` : ''}
-<div class="callout"><p>Published Ki, functional EC50/IC50 and Emax values retain their experimental context. Profiles distinguish measured parameters from estimated Hill slopes, baseline and mixture rules, fallback efficacy, and brain-distribution settings. The circuit has a direct rat-culture synaptic reference for diazepam; other current gains and the regional/cognitive mappings remain estimates. Unknown values stay unknown. PubChem provides computed conformers or explicitly labeled 2D drawings.</p></div>
+<div class="callout"><p>Published Ki, functional EC50/IC50 and Emax values retain their experimental context. Profiles distinguish measured parameters from estimated Hill slopes, baseline and mixture rules, fallback efficacy, and brain-distribution settings. Selected regional target weights use human PET references, while their mapping into population activity and cognition remains estimated. Metabolic cards distinguish in-vitro Ki, clinically derived clearance fractions, and observed study outcomes from the current calculation. The circuit retains a direct rat-culture synaptic reference for diazepam. Unknown values stay unknown. PubChem provides computed conformers or explicitly labeled 2D drawings.</p></div>
 <ol>${sources.map(s => `<li><p>${link(s)}${s.type ? `<br>${e(s.type)}` : ''}</p></li>`).join('')}</ol>
 <p>The Izhikevich paper supports reduced spiking equations. Applying receptor-assay curves and selected rat-culture synaptic measurements to this circuit is a separate modeling choice. Biological sources and software tests do not establish clinical predictive accuracy.</p>`;
 }

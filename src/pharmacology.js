@@ -7,6 +7,7 @@
  * are not inferred from chemical structure.
  */
 import { validateFunctionalAssay, functionalResponse, responsePool } from './functional-response.js';
+import { computeMetabolicInteractions } from './interaction-evidence.js';
 
 export const PK_DT_HOURS = 1 / 240;
 export const TARGET_IDS = Object.freeze(['SERT', 'DAT', 'NET', 'D2', 'HT2A', 'HT1A', 'GABAA', 'NMDA', 'ADENOSINE', 'NACHR']);
@@ -16,7 +17,7 @@ export const PHARMACOLOGY_LIMITATIONS = Object.freeze([
   'Brain is an unbound-equivalent compartment; free fractions, volumes, Kp,uu and equilibration are simplified and may be assumed.',
   'Affinity values from different assays are not necessarily directly comparable; occupancy is an equilibrium approximation.',
   'Active metabolites, regional distribution, tolerance and long-term adaptation are not dynamically modeled.',
-  'CYP inhibition is qualitatively motivated; its numeric potency and clearance fraction are illustrative.',
+  'Selected CYP interactions use measured parent Ki and study-derived clearance fractions. Liver exposure, pathway transfer and mixture additivity remain estimates; missing potency or clearance evidence leaves an interaction unquantified.',
   'Target changes drive a phenomenological neural network and cannot predict behavior, experience, safety or treatment response.',
 ]);
 
@@ -209,8 +210,13 @@ export function computeTargets(exposures, compounds, endogenousDrive = DEFAULT_E
 export class PharmacologySimulation {
   constructor(catalog, options = {}) {
     const { endogenousDrive, ...numericOptions } = options;
-    this.options = { seed: 42, stepHours: PK_DT_HOURS, plasmaVolumeL: 3, brainVolumeL: 1.4, cypInhibitionI50NM: 100, cyp2d6ClearanceFraction: 0.5, ...numericOptions };
-    positive(this.options.stepHours, 'stepHours'); positive(this.options.plasmaVolumeL, 'plasmaVolumeL'); positive(this.options.brainVolumeL, 'brainVolumeL'); positive(this.options.cypInhibitionI50NM, 'cypInhibitionI50NM'); fraction(this.options.cyp2d6ClearanceFraction, 'cyp2d6ClearanceFraction');
+    this.options = { seed: 42, stepHours: PK_DT_HOURS, plasmaVolumeL: 3, brainVolumeL: 1.4, interactionModel: 'evidence-v1', ...numericOptions };
+    positive(this.options.stepHours, 'stepHours'); positive(this.options.plasmaVolumeL, 'plasmaVolumeL'); positive(this.options.brainVolumeL, 'brainVolumeL');
+    if (!['evidence-v1', 'legacy-estimated'].includes(this.options.interactionModel)) throw new TypeError('Unknown interaction model');
+    if (this.options.interactionModel === 'legacy-estimated') {
+      this.options.cypInhibitionI50NM ??= 100; this.options.cyp2d6ClearanceFraction ??= 0.5;
+      positive(this.options.cypInhibitionI50NM, 'cypInhibitionI50NM'); fraction(this.options.cyp2d6ClearanceFraction, 'cyp2d6ClearanceFraction');
+    }
     this.compounds = new Map();
     for (const profile of (Array.isArray(catalog) ? catalog : catalog?.compounds || [])) this.registerCompound(profile);
     this.endogenousDrive = { ...DEFAULT_ENDOGENOUS_DRIVE, ...endogenousDrive };
@@ -267,7 +273,17 @@ export class PharmacologySimulation {
     return { ke: plasmaElimination * clearanceFactor, kPB, kBP, calibrated };
   }
 
-  _interactionState() {
+  _interactionState(includeEvidence = true) {
+    if (this.options.interactionModel === 'legacy-estimated') return this._legacyInteractionState();
+    const exposures = Object.values(this.records).filter(r => r.active).map(record => ({
+      id: record.id, freePlasmaNM: record.plasmaAmountNMol / this.options.plasmaVolumeL * this.compounds.get(record.id).pk.freeFraction,
+    }));
+    return computeMetabolicInteractions(exposures, this.compounds, { includeEvidence });
+  }
+
+  // Historical constants only for replaying older saved experiments. New
+  // simulations never use the shared 100 nM potency or 50% clearance fraction.
+  _legacyInteractionState() {
     const active = Object.values(this.records).filter(r => r.active);
     const inhibitors = active.filter(r => (this.compounds.get(r.id).metabolism.inhibits || []).some(e => String(typeof e === 'string' ? e : e.enzyme).toUpperCase() === 'CYP2D6'));
     const inhibitionWeight = inhibitors.reduce((sum, r) => sum + r.plasmaAmountNMol / this.options.plasmaVolumeL * this.compounds.get(r.id).pk.freeFraction / this.options.cypInhibitionI50NM, 0);
@@ -278,7 +294,7 @@ export class PharmacologySimulation {
       const profile = this.compounds.get(record.id);
       const substrate = (profile.metabolism.substrate || []).some(e => String(typeof e === 'string' ? e : e.enzyme).toUpperCase() === 'CYP2D6');
       factors[record.id] = substrate ? 1 - this.options.cyp2d6ClearanceFraction * inhibition : 1;
-      if (substrate && inhibition > 0) interactions.push({ substrateId: record.id, inhibitorIds: inhibitors.map(r => r.id), enzyme: 'CYP2D6', clearanceFactor: factors[record.id], evidence: 'Qualitative enzyme pathway; concentration–inhibition relationship and fractional clearance are illustrative. Active inhibitor metabolites are omitted.' });
+      if (substrate && inhibition > 0) interactions.push({ substrateId: record.id, inhibitorIds: inhibitors.map(r => r.id), enzyme: 'CYP2D6', clearanceFactor: factors[record.id], modeled: true, evidenceType: 'legacy estimate', assays: [], evidence: 'Legacy experiment: original shared inhibition constant and clearance fraction are retained for PK replay. These coefficients are illustrative, not measured. Active inhibitor metabolites are omitted.' });
     }
     return { factors, interactions };
   }
@@ -294,7 +310,7 @@ export class PharmacologySimulation {
   }
 
   step() {
-    const { factors } = this._interactionState();
+    const { factors } = this._interactionState(false);
     for (const record of Object.values(this.records)) {
       if (!record.active) continue;
       record.clearanceFactor = factors[record.id];
@@ -316,10 +332,10 @@ export class PharmacologySimulation {
   get stats() {
     const allExposures = Object.values(this.records).map(r => this._exposure(r));
     const exposures = allExposures.filter(e => e.active);
-    const interactions = this._interactionState().interactions;
+    const { interactions, references = [] } = this._interactionState();
     const massBalance = allExposures.reduce((m, r) => ({ introducedNMol: m.introducedNMol + r.initialAmountNMol, remainingNMol: m.remainingNMol + r.totalAmountNMol, eliminatedNMol: m.eliminatedNMol + r.eliminatedNMol, removedNMol: m.removedNMol + r.removedNMol }), { introducedNMol: 0, remainingNMol: 0, eliminatedNMol: 0, removedNMol: 0 });
     massBalance.errorNMol = massBalance.introducedNMol - massBalance.remainingNMol - massBalance.eliminatedNMol - massBalance.removedNMol;
-    return { timeHours: this.timeHours, exposures, allExposures, targets: computeTargets(exposures, this.compounds, this.endogenousDrive), interactions, massBalance, ledger: clone(this.ledger), limitations: [...PHARMACOLOGY_LIMITATIONS], model: { plasmaVolumeL: this.options.plasmaVolumeL, brainVolumeL: this.options.brainVolumeL, stepHours: this.options.stepHours } };
+    return { timeHours: this.timeHours, exposures, allExposures, targets: computeTargets(exposures, this.compounds, this.endogenousDrive), interactions, interactionReferences: references, massBalance, ledger: clone(this.ledger), limitations: [...PHARMACOLOGY_LIMITATIONS], migrationNote: this.options.interactionModel === 'legacy-estimated' ? 'Legacy interaction model retained for PK replay: shared assumed inhibition constant and clearance fraction. Export any work you want to keep, then reload the page for a new experiment with the current catalog and evidence model. Reset retains the imported model.' : null, model: { plasmaVolumeL: this.options.plasmaVolumeL, brainVolumeL: this.options.brainVolumeL, stepHours: this.options.stepHours, interactionModel: this.options.interactionModel } };
   }
 
   snapshot() {
@@ -329,7 +345,7 @@ export class PharmacologySimulation {
   restore(snapshot) {
     if (!snapshot || snapshot.version !== 1) throw new TypeError('Unsupported pharmacology checkpoint');
     const data = clone(snapshot);
-    const checked = new PharmacologySimulation(data.compounds, { ...data.options, endogenousDrive: data.endogenousDrive });
+    const checked = new PharmacologySimulation(data.compounds, { ...data.options, interactionModel: data.options?.interactionModel ?? 'legacy-estimated', endogenousDrive: data.endogenousDrive });
     if (!Number.isInteger(data.ticks) || data.ticks < 0 || data.timeHours !== data.ticks * checked.options.stepHours) throw new RangeError('Invalid checkpoint time');
     finite(data.accumulator, 'accumulator');
     if (data.accumulator >= checked.options.stepHours) throw new RangeError('Invalid checkpoint remainder');

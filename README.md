@@ -1,6 +1,6 @@
 # NeuroScope — Brain & Cognition Lab
 
-**NeuroScope 3.1.0** is an interactive 3D browser program for exploring brain-active molecules, circulation, blood–brain exchange, target interactions, regional activity and a symbolic cognitive workspace. It does **not** implement a complete human brain or predict human consciousness or intelligence. Written in JavaScript with Three.js, it combines sourced molecular structures and cortical surface anatomy with explicitly bounded computational models. Numerical engines run independently of rendering.
+**NeuroScope 3.2.0** is an interactive 3D browser program for exploring brain-active molecules, circulation, blood–brain exchange, target interactions, regional activity and a symbolic cognitive workspace. It does **not** implement a complete human brain or predict human consciousness or intelligence. Written in JavaScript with Three.js, it combines sourced molecular structures and cortical surface anatomy with explicitly bounded computational models. Numerical engines run independently of rendering.
 
 [Open NeuroScope](https://3h6-1.github.io/neuroscope/) · [GitHub source](https://github.com/3h6-1/neuroscope)
 
@@ -104,21 +104,26 @@ SERT uses the experimental **3.15 Å 5I71 crystal structure**, an engineered con
 
 The PK system conserves modeled amounts across plasma, a brain unbound-equivalent compartment and an elimination ledger. Binding occupancy and functional response are calculated separately: selected measured EC50/IC50 and assay maxima now replace generic response coefficients, while Ki/Kd retain their distinct binding meaning. Profile and target panels show the experimental endpoint, species/preparation, units, reference response and source, plus estimated Hill interpolation and transfer to the circuit. Binding scales without adequate evidence remain labeled estimates.
 
-Diazepam's circuit effect uses measured inhibitory-current decay durations from rat hippocampal cultures in place of the previous generic GABA current bias and amplitude gain. A single-exponential conversion, interpolation, transfer to this circuit and concentrations outside the measured range are explicitly labeled. See [the synaptic evidence audit](docs/research-neural.md) and [the functional evidence audit](docs/research-pharmacology.md). Other neuron-current gains, all regional receptor weights/couplings, cognitive mappings, brain partition settings and combination-response rules remain estimates. Selected CYP relationships are sourced, while quantitative inhibition strengths remain illustrative. Active metabolites and most biological adaptations are omitted.
+Diazepam's circuit effect uses measured inhibitory-current decay durations from rat hippocampal cultures in place of the previous generic GABA current bias and amplitude gain. A single-exponential conversion, interpolation, transfer to this circuit and concentrations outside the measured range are explicitly labeled. See [the synaptic evidence audit](docs/research-neural.md) and [the functional evidence audit](docs/research-pharmacology.md).
+
+Six human PET reference maps now replace 120 of 300 hand-selected regional sensitivity weights. The **Regional evidence** inspector identifies each measured source value, tracer, mapped anatomical parcel, normalization and fallback. These spatial proxies constrain regional variation; their conversion to firing effects remains estimated. The [regional evidence audit](docs/research-regional.md) documents the mapping and reproducible import. Extracted atlas data retain **CC BY-NC-SA 4.0**, including its noncommercial restriction; [data attribution and license](docs/REGIONAL-DATA-LICENSE.md) are separate from independently written source code.
+
+Selected metabolic interactions now use measured parent CYP2D6 inhibition constants and substrate-specific clearance fractions derived from human inhibitor studies under explicit assumptions. The interface separates these **assay-informed estimates** from **observed study results** and **unquantified interactions**. It does not apply one study's AUC multiplier to an arbitrary mixture. See [the interaction evidence audit](docs/research-interactions.md). Active metabolites remain omitted, which is especially consequential for bupropion and fluoxetine. Other neural gains, regional couplings, cognitive mappings, brain partition settings and combination-response rules remain estimates.
 
 The firing traces and workspace journal show what these equations and selection rules produce. They do not predict a person's perception, mood, clinical response or risks from a combination. Activity entropy is a spatial summary, not a consciousness score. The language interface is separate and does not expose all hidden reasoning or demonstrate neuronal emergence of language. Missing modeled interactions indicate incomplete coverage. Passing software tests verifies implementation properties, not biological calibration.
 
-The current model preserves deterministic replay of its own exports. Older exports retain their original compound profiles; they do not silently acquire newly curated assay data. Older neural checkpoints without synaptic-decay evidence are migrated with an explicit notice, and their future trajectories can differ from the older model.
+The current model preserves deterministic replay of its own exports. Older exports retain their original compound profiles; they do not silently acquire newly curated assay data. Older neural or regional checkpoints migrate with explicit notices, and their future trajectories can differ. Older PK checkpoints retain their original assumed interaction coefficients with a persistent legacy label; new experiments use the current evidence model.
 
 Experiment exports retain numerical states, RNG states, delay history, custom profiles, workspace memories and response provenance. Importing an older experiment without regional/workspace state initializes those layers at the saved clock with explicit migration notes; unrecorded history is not fabricated.
 
 ## Tests
 
-`npm test` passes 146 tests as of October 13, 2026. Browser checks cover desktop/mobile layout, regional exposure changes, memory and journal controls, and actual SmolLM2 WebGPU loading, answer generation, response provenance and unloading. Tests cover:
+Run `npm test` for the complete suite. Browser checks cover desktop/mobile layout, regional and interaction evidence inspectors, exposure changes, memory and journal controls. Earlier checks also covered actual SmolLM2 WebGPU loading, answer generation, response provenance and unloading. Tests cover:
 
 - PK mass balance, nonnegative concentrations, exchange equilibrium, terminal half-life behavior, competition, modulation and selected metabolic interactions.
 - Neural spike/reset dynamics, excitatory/inhibitory signs, matched controls, integration convergence and seeded reproducibility.
-- Regional population bounds, delayed coupling, comparisons under shared current cognitive drive, integration convergence, assumed target effects and exact seeded replay.
+- PET atlas provenance and numeric fixtures, hemisphere/parcel mapping, within-target normalization, explicit fallbacks, regional population bounds, delayed coupling, integration convergence and exact current-model replay.
+- Inhibition units and incubation-binding correction, conditional clearance-fraction derivation, multiple-inhibitor competition, unresolved interactions, separate clinical references and legacy PK replay.
 - Symbolic retrieval and selection, bounded cognitive parameters, response provenance, cancellation and offline dialogue behavior.
 - Frame-partition independence and JSON checkpoint continuation for the numerical engines.
 - Serotonin diffusion statistics, confinement, reaction accounting, equilibrium occupancy and reduced reuptake under inhibition.
@@ -132,6 +137,8 @@ Experiment exports retain numerical states, RNG states, delay history, custom pr
 ```text
 src/experiment.js        Coupled playback clocks, checkpoints and experiment import/export
 src/pharmacology.js      Plasma/brain amounts, target competition and interactions
+src/interaction-evidence.js  Measured inhibition, derived clearance fractions and study references
+src/regional-evidence.js PET spatial proxies, anatomical mappings and explicit fallback estimates
 src/neural.js            Seeded spiking network and matched baseline
 src/brain.js             Thirty regional E/I populations and delayed schematic connections
 src/brain-geometry.js    Sourced cortical surface and approximate regional overlays

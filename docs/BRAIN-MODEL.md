@@ -8,7 +8,7 @@ The 30 populations comprise bilateral dorsolateral and ventromedial prefrontal c
 
 The display uses actual FreeSurfer fsaverage5 cortical surface data distributed by Nilearn, but the regional markers use **approximate, unregistered MNI-like coordinates**. They are not segmented parcels fitted to that surface. Cerebellum and brainstem context geometry is schematic. See [BRAIN-ANATOMY.md](BRAIN-ANATOMY.md) for exact records, coordinate conversion, checksums and licenses.
 
-The model has **132 directed effective connections** with assumed strengths and delays. Curves are illustrative paths, not tractography or a measured human connectome. Receptor “density” fields are dimensionless, assumed sensitivity weights, not PET measurements. The actual receptor atlas literature demonstrates regional heterogeneity; this program does not load or calibrate to that atlas. [Hansen et al., 2022](https://www.nature.com/articles/s41593-022-01186-3).
+The model has **132 directed effective connections** with assumed strengths and delays. Curves are illustrative paths, not tractography or a measured human connectome. Six human PET maps from [Hansen et al., 2022](https://www.nature.com/articles/s41593-022-01186-3) now inform 120 of 300 regional sensitivity weights. These dimensionless spatial proxies use explicitly named, hemisphere-specific parcels, divided by the same target's reference mean. Anatomical mapping, equal parcel averaging, normalization and the proportional conversion from binding to neural sensitivity remain estimates. They do not measure neuronal gain. See [the regional data audit](research-regional.md) for imported values, tracer limitations, mapping, reproducibility and license.
 
 Primary visual, auditory, somatosensory, olfactory and gustatory populations and their inputs are excluded from this functional network. The anatomical cortex remains visible as reference. This node selection does not imply that real sensory processing comprises five cleanly separable modules, or that association regions are biologically independent of sensory experience. Typed text enters a **direct symbolic software channel**; it does not simulate biological reading or establish a physically sensory-free human brain.
 
@@ -33,7 +33,7 @@ A comparison population receives exactly the same starting state, noise and curr
 
 ## From targets to regional dynamics
 
-The PK/PD layer supplies receptor activity changes Δ and transporter blockade B = 1 − activity. Selected activity proxies now use measured functional EC50/IC50 and assay maxima, separately from binding affinity. Their transfer to endogenous brain activity remains an estimate. The rat-culture diazepam synaptic-decay calibration applies to the separate spiking circuit, not these regional populations. Each region still has assumed relative weights d for the ten modeled target families. Define G = d_GABAA max(0, Δ_GABAA) and N = d_NMDA max(0, −Δ_NMDA). The exact default transfer rules are:
+The PK/PD layer supplies receptor activity changes Δ and transporter blockade B = 1 − activity. Selected activity proxies now use measured functional EC50/IC50 and assay maxima, separately from binding affinity. Their transfer to endogenous brain activity remains an estimate. The rat-culture diazepam synaptic-decay calibration applies to the separate spiking circuit, not these regional populations. Regional weights d use PET-derived spatial proxies where supported, otherwise labeled fallback estimates. SERT, 5-HT1A, 5-HT2A and GABAA maps cover 24 nodes each; D2/3 covers 22 extrastriatal proxies; DAT covers the two caudate proxies. No whole-thalamus or brainstem map is silently assigned to a specific nucleus. Define G = d_GABAA max(0, Δ_GABAA) and N = d_NMDA max(0, −Δ_NMDA). The exact default transfer rules are:
 
 ```text
 bE = clip(0.2 d_SERT B_SERT + 0.5 d_DAT B_DAT + 0.5 d_NET B_NET
@@ -48,7 +48,7 @@ These signs and magnitudes are population-scale hypotheses. Real receptor action
 
 ```text
 virtual plasma exposure → brain exchange → target competition/activity
-→ assumed regional bias/gain → population activity
+→ PET-weighted or estimated regional bias/gain → population activity
 → assumed workspace metrics → memory selection probabilities
 ```
 
@@ -93,5 +93,7 @@ The offline state inspector produces bounded, deterministic descriptions of reco
 JSON exports preserve PK profiles and ledgers, numerical clocks, random states, regional populations, delay buffers, targets, internal drives, workspace memories/events/messages and response mode/model/context provenance. Replay uses saved response text; it does not regenerate an LLM answer. Weights and runtime state of the separate language model are not part of a numerical checkpoint.
 
 Older version-1 experiment files without regional/workspace states initialize those layers at the imported clock. An explicit migration note records that past regional dynamics and workspace events were unavailable. The program does not reconstruct or invent that history. Invalid imports are validated in a temporary experiment and leave the existing experiment unchanged on failure.
+
+Current regional exports include `regionalModelRevision: "pet-spatial-v1"` and continue exactly. Older regional checkpoints retain their saved states and delay histories, but future modulation uses the new spatial weights; a persistent migration notice makes that trajectory change explicit. Older PK checkpoints retain their original assumed interaction model for PK replay and label it as legacy. Reset retains imported profiles and model settings. To start with the current catalog and evidence model, export any work to keep and reload the page.
 
 Tests cover finite bounded populations, equality of both branches with shared noise/drive and absent direct drug modulation, delayed-state checkpoint continuation, renderer-partition independence, integration-step convergence, pharmacology-driven regional differences, B12's absent acute effect, anatomy/topology correspondence, coupled workspace replay and atomic invalid-import rejection. They establish implementation consistency; they do not establish biological calibration. Distributed association-network organization is informed by [Yeo et al., 2011](https://pmc.ncbi.nlm.nih.gov/articles/PMC3174820/), while the program's chosen nodes, coordinates and edges remain schematic.

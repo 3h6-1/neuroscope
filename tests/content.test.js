@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { modelContent, profileContent, targetContent, neuralEvidenceContent } from '../src/content.js';
+import { modelContent, profileContent, targetContent, neuralEvidenceContent, regionalEvidenceContent, interactionEvidenceContent, interactionReferenceContent, sourcesContent, escapeHTML } from '../src/content.js';
 import { DIAZEPAM_NEURAL_CALIBRATION } from '../src/neural-evidence.js';
 import { modulationFromTargets } from '../src/neural.js';
+import { regionalSensitivity, REGIONAL_ATLAS } from '../src/regional-evidence.js';
+import { interactionProfileEvidence } from '../src/interaction-evidence.js';
 
 const assay = {
   kind:'activation', midpointNM:5.4, midpointType:'EC50', maxResponse:0.28,
@@ -99,4 +101,107 @@ test('model and calibrated profile retain direct electrophysiology context and u
   }
   assert.match(modelContent(),/Shared denominators are an estimated mixture rule/);
   assert.match(modelContent(),/regional weights and cognitive mappings remain <strong>estimated/);
+});
+
+const fallbackWeights = {SERT:0.7,DAT:0.5,NET:0.8,D2:0.5,HT2A:0.8,HT1A:0.7,GABAA:1,NMDA:1,ADENOSINE:0.8,NACHR:0.7};
+const evidenceProfile = id => ({id,name:id,metabolism:{interactionEvidenceId:id}});
+
+test('regional inspector distinguishes original PET measurements, derived weights and unsupported targets', () => {
+  const regionalEvidence = regionalSensitivity('dlpfc_l',fallbackWeights);
+  const html = regionalEvidenceContent({name:'Left dorsolateral prefrontal cortex',receptorDensities:regionalEvidence.weights,regionalEvidence});
+  for(const label of ['5 of 10 target weights use PET references','PET-derived relative proxy','Estimated fallback','Atlas reference parcel mean','Measured parameter','PET tracer','Source participants','Normalization · estimated','Reference mean','Reference parcels','Mapping assumption','dimensionless transformations','Population response remains estimated','CC-BY-NC-SA-4.0']) {
+    assert.ok(html.includes(label),label);
+  }
+  assert.ok(!html.includes('[object Object]'));
+  assert.ok(html.includes(regionalEvidence.evidenceByTarget.HT2A.sourceUrl));
+  assert.ok(html.includes('mean(mapped parcel values) / mean(reference parcel values)'));
+  assert.ok(html.includes('No matching adenosine receptor atlas'));
+});
+
+test('unresolved anatomical territories clearly retain all estimated regional weights', () => {
+  const regionalEvidence = regionalSensitivity('md_thalamus_l',fallbackWeights);
+  const html=regionalEvidenceContent({name:'Mediodorsal thalamus',receptorDensities:regionalEvidence.weights,regionalEvidence});
+  assert.match(html,/0 of 10 target weights use PET references/);
+  assert.match(html,/does not isolate the mediodorsal nucleus/);
+  assert.equal((html.match(/Estimated fallback/g)||[]).length,10);
+  assert.ok(!html.includes('PET-derived relative proxy'));
+});
+
+test('regional evidence and source links render untrusted provenance as text', () => {
+  const regionalEvidence=structuredClone(regionalSensitivity('dlpfc_l',fallbackWeights));
+  const hostile='<svg onload="alert(1)">';
+  for(const item of Object.values(regionalEvidence.evidenceByTarget)) {
+    Object.assign(item,{sourceTitle:hostile,sourceUrl:'javascript:alert(1)',dataUrl:'data:text/html,bad',mappingNote:hostile,limitations:[hostile],normalization:{formula:hostile,reference:hostile}});
+  }
+  const html=regionalEvidenceContent({name:hostile,regionalEvidence});
+  assert.ok(!html.includes('<svg'));
+  assert.ok(!html.includes('href="javascript:'));
+  assert.ok(!html.includes('href="data:'));
+  assert.ok(html.includes('&lt;svg onload=&quot;alert(1)&quot;&gt;'));
+});
+
+test('metabolic cards expose nominal Ki, binding correction, derived clearance and omitted metabolites separately', () => {
+  const inhibitor=interactionProfileEvidence(evidenceProfile('fluoxetine'));
+  const substrate=interactionProfileEvidence(evidenceProfile('aripiprazole'));
+  const html=interactionEvidenceContent({substrateId:'aripiprazole',inhibitorIds:['fluoxetine'],enzyme:'CYP2D6',modeled:true,clearanceFactor:0.75,
+    assays:inhibitor.inhibitionAssays,clearanceModel:substrate.clearanceModels[0],sources:[...inhibitor.sources,...substrate.sources]});
+  for(const label of ['ASSAY-INFORMED ESTIMATE','75%','Measured nominal inhibition Ki','860 nM','68 nM','Derived unbound Ki','412.8 nM','35.36 nM','Binding-correction evidence','Parent-mixture evidence','Clearance fraction derived under assumptions','2.12 ×','complete pathway inhibition','Active metabolites']) assert.ok(html.includes(label),label);
+  assert.ok(!html.includes('OBSERVED HUMAN STUDY'));
+  assert.ok(!html.includes('predicted AUC'));
+});
+
+test('unmodeled and partially covered mixtures never imply zero effect or complete coverage', () => {
+  const absent=interactionEvidenceContent({enzyme:'CYP2D6',substrateId:'unknown',inhibitorIds:['x'],modeled:false,clearanceFactor:null});
+  assert.match(absent,/QUANTITATIVE EFFECT UNMODELED/);
+  assert.match(absent,/missing parameters do not mean no interaction/);
+  assert.ok(!absent.includes('0%'));
+  assert.ok(!absent.includes('100%'));
+  const partial=interactionEvidenceContent({enzyme:'CYP2D6',substrateId:'unknown',inhibitorIds:['known','custom'],modeled:true,clearanceFactor:0.9,partial:true,unmodeledInhibitorIds:['custom']});
+  assert.match(partial,/Incomplete mixture:/);
+  assert.match(partial,/factor excludes those contributions/);
+});
+
+test('human-study comparator preserves protocol, participants and separation from virtual exposure', () => {
+  const reference=interactionProfileEvidence(evidenceProfile('bupropion')).clinicalReferences[0];
+  const html=interactionReferenceContent(reference);
+  for(const label of ['OBSERVED HUMAN STUDY','Approximately fivefold AUC','150 mg twice daily','15 male CYP2D6 extensive metabolizers','small parent-only calculated effect','omitted metabolites']) assert.ok(html.includes(label),label);
+  assert.ok(!html.includes('Modeled total clearance'));
+  assert.ok(html.includes(escapeHTML(reference.sources[0].url)));
+});
+
+test('interaction evidence blocks executable URLs and escapes nested imported text', () => {
+  const hostile='<img src=x onerror=alert(1)>';
+  const html=interactionEvidenceContent({substrateId:hostile,inhibitorIds:[hostile],enzyme:hostile,evidence:hostile,modeled:true,clearanceFactor:0.9,partial:true,unmodeledInhibitorIds:[hostile],
+    assays:[{compoundId:hostile,enzyme:hostile,system:hostile,species:hostile,components:[{label:hostile,kiNM:1,bindingEvidence:hostile,fractionEvidence:hostile}],assumptions:[hostile],sourceIds:['bad']}],sources:[{id:'bad',title:hostile,url:'javascript:alert(1)'}]});
+  const reference=interactionReferenceContent({title:hostile,endpoint:hostile,result:hostile,regimen:hostile,population:hostile,applicability:hostile,sourceIds:['bad'],sources:[{id:'bad',title:hostile,url:'javascript:alert(1)'}]});
+  for(const rendered of [html,reference]) {
+    assert.ok(!rendered.includes('<img'));
+    assert.ok(!rendered.includes('href="javascript:'));
+    assert.ok(rendered.includes('&lt;img src=x onerror=alert(1)&gt;'));
+  }
+});
+
+test('custom profiles cannot acquire measured metabolic evidence by copying a curated identifier', () => {
+  const html=profileContent({...evidenceProfile('bupropion'),custom:true});
+  assert.match(html,/unverified hypotheses/);
+  assert.ok(!html.includes('12650 nM'));
+  assert.ok(!html.includes('OBSERVED HUMAN STUDY'));
+  const measured=profileContent(evidenceProfile('bupropion'));
+  assert.match(measured,/12650 nM/);
+  assert.match(measured,/Parent-only inhibition can severely underrepresent/);
+});
+
+test('source directory attributes regional data license and metabolic studies', () => {
+  const html=sourcesContent({compounds:[evidenceProfile('bupropion')]});
+  assert.ok(html.includes(REGIONAL_ATLAS.citationUrl));
+  assert.ok(html.includes(REGIONAL_ATLAS.licenseUrl));
+  assert.match(html,/Tanaudommongkon/);
+  assert.match(html,/observed study outcomes from the current calculation/);
+});
+
+test('legacy imported metabolic coefficients cannot appear as assay-informed evidence', () => {
+  const html=interactionEvidenceContent({enzyme:'CYP2D6',substrateId:'old',inhibitorIds:['old-inhibitor'],modeled:true,clearanceFactor:0.5,evidenceType:'legacy estimate',evidence:'Replay uses the legacy assumed potency.'});
+  assert.match(html,/LEGACY ESTIMATED CLEARANCE/);
+  assert.match(html,/Replay uses the legacy assumed potency/);
+  assert.ok(!html.includes('ASSAY-INFORMED ESTIMATE'));
 });

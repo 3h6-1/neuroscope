@@ -5,14 +5,18 @@
  * Sources justify the model family, not these deliberately assumed parameters:
  * Wilson & Cowan (1972): https://pmc.ncbi.nlm.nih.gov/articles/PMC1484078/
  * Association networks: https://pmc.ncbi.nlm.nih.gov/articles/PMC3174820/
- * Coordinates, edges, delays and receptor densities below are schematic;
- * they are not a registered atlas, measured connectome or receptor PET map.
+ * Coordinates, edges and delays are schematic. Selected regional sensitivity
+ * weights use normalized human PET binding maps; their conversion to neural
+ * gain remains estimated. Rendered nodes are not registered atlas parcels.
  * The baseline removes direct drug modulation but shares the current cognitive
  * drive, including its drug-dependent changes. It is not an independent
  * untreated/no-drug counterfactual. Legacy baseline* API names are retained.
  * There is no sensory input or measure of consciousness in this module.
  */
 import { seededRandom, gaussian } from './simulation.js';
+import { regionalSensitivity } from './regional-evidence.js';
+
+export const REGIONAL_MODEL_REVISION = 'pet-spatial-v1';
 
 const clone = value => structuredClone(value);
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
@@ -57,15 +61,21 @@ function densities(id, network) {
   return Object.freeze(d);
 }
 
+function regionalParameters(id, network, baseId = id) {
+  const { weights, evidenceByTarget, summary } = regionalSensitivity(id, densities(baseId, network));
+  return { receptorDensities: weights, densityEvidence: summary,
+    regionalEvidence: Object.freeze({ evidenceByTarget, summary }) };
+}
+
 export const REGIONS = Object.freeze([
   ...definitions.flatMap(([id, name, network, position, role]) => ['l', 'r'].map(side => Object.freeze({
     id: `${id}_${side}`, name: `${side === 'l' ? 'Left' : 'Right'} ${name}`, network,
     position: Object.freeze([position[0] * (side === 'l' ? -1 : 1), position[1], position[2]]), role,
-    receptorDensities: densities(id, network), densityEvidence: 'Assumed relative sensitivity weights; not measured receptor density',
+    ...regionalParameters(`${id}_${side}`, network, id),
   }))),
   ...[['raphe', 'Dorsal raphe', [0, -28, -18]], ['lc', 'Locus coeruleus (lumped)', [0, -36, -26]]].map(([id, name, position]) => Object.freeze({
     id, name, position: Object.freeze(position), network: 'modulatory', role: 'Lumped modulatory population; E/I reduction is an illustrative abstraction',
-    receptorDensities: densities(id, 'modulatory'), densityEvidence: 'Assumed relative sensitivity weights; not measured receptor density',
+    ...regionalParameters(id, 'modulatory'),
   })),
 ]);
 
@@ -220,7 +230,7 @@ export class BrainSimulation {
       timeMs: this.timeMs, meanActivity, baselineActivity, activityDelta: meanActivity - baselineActivity, activityEntropy: entropy,
       regional: this.regions.map((region, index) => ({ ...region, name: REGIONS[index].name, network: REGIONS[index].network, delta: region.e - region.baselineE })),
       modulation: { regional: clone(this.modulation) },
-      interpretation: 'Normalized schematic population activity. Baseline removes direct drug modulation while sharing the current cognitive drive, including drug-dependent drive changes; it is not an independent untreated/no-drug counterfactual. Entropy describes the spatial activity distribution, not consciousness. Coordinates, connectivity, receptor weights and drug-to-rate mappings are assumed. No sensory inputs.',
+      interpretation: 'Normalized schematic population activity. Baseline removes direct drug modulation while sharing the current cognitive drive, including drug-dependent drive changes; it is not an independent untreated/no-drug counterfactual. Entropy describes the spatial activity distribution, not consciousness. Selected spatial weights use human PET maps; anatomical mapping, normalization, other weights, connectivity and drug-to-rate gains remain estimates. No sensory inputs.',
       migrationNote: this.migrationNote,
     };
   }
@@ -235,12 +245,13 @@ export class BrainSimulation {
   }
 
   snapshot() {
-    return clone({ version: 1, options: this.options, ticks: this.ticks, timeMs: this.timeMs, accumulator: this.accumulator, rngState: this.rng.getState(), regions: this.regions, noise: this.noise, lastNoiseTick: this.lastNoiseTick, drive: this.drive, targets: this.targets, historyIndex: this.historyIndex, history: this.history, baselineHistory: this.baselineHistory, migrationNote: this.migrationNote });
+    return clone({ version: 1, regionalModelRevision: REGIONAL_MODEL_REVISION, options: this.options, ticks: this.ticks, timeMs: this.timeMs, accumulator: this.accumulator, rngState: this.rng.getState(), regions: this.regions, noise: this.noise, lastNoiseTick: this.lastNoiseTick, drive: this.drive, targets: this.targets, historyIndex: this.historyIndex, history: this.history, baselineHistory: this.baselineHistory, migrationNote: this.migrationNote });
   }
 
   restore(snapshot) {
     if (!snapshot || snapshot.version !== 1 || !snapshot.options) throw new TypeError('Unsupported brain checkpoint');
     const state = clone(snapshot);
+    if (state.regionalModelRevision != null && state.regionalModelRevision !== REGIONAL_MODEL_REVISION) throw new TypeError('Unsupported regional model revision');
     const candidate = new BrainSimulation(state.options);
     integer(state.ticks, 'ticks'); finite(state.timeMs, 'time', 0); finite(state.accumulator, 'remainder', 0, candidate.options.dtMs);
     if (state.accumulator >= candidate.options.dtMs || Math.abs(state.timeMs - state.ticks * candidate.options.dtMs) > 1e-8) throw new RangeError('Invalid brain clock');
@@ -248,6 +259,7 @@ export class BrainSimulation {
     integer(state.lastNoiseTick, 'noise tick', -1, Math.floor(state.timeMs / 5));
     integer(state.historyIndex, 'history index', 0, candidate.historyLength - 1);
     if (state.migrationNote !== null && (typeof state.migrationNote !== 'string' || state.migrationNote.length > 500)) throw new TypeError('Invalid brain migration note');
+    if (state.regionalModelRevision == null) state.migrationNote = 'Legacy regional checkpoint: saved populations and history retained; subsequent regional effects use PET-derived spatial weights. Future evolution differs from the original model.';
     if (!Array.isArray(state.regions) || state.regions.length !== REGIONS.length || !Array.isArray(state.noise) || state.noise.length !== REGIONS.length) throw new TypeError('Invalid brain population count');
     for (let index = 0; index < REGIONS.length; index++) {
       const region = state.regions[index];
