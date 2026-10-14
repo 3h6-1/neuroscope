@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "modelModule": "src/neural-evidence.js",
+  "purpose": "Independent preparation-transfer stress tests, not a calibration or validation of human neural activity.",
+  "calibrationSourcesExcluded": [
+    {
+      "id": "cao-2018",
+      "url": "https://doi.org/10.1038/s41598-018-28754-7",
+      "reason": "The existing concentration/decay curve was constructed from these measurements. Reproducing them is a calibration consistency check, not independent validation."
+    }
+  ],
+  "sources": [
+    {
+      "id": "chapman-2025",
+      "citation": "Chapman et al. (2025), Frontiers in Cellular Neuroscience 19:1624813",
+      "url": "https://doi.org/10.3389/fncel.2025.1624813",
+      "locator": "Figure 1F–G and Methods 2.2–2.3",
+      "extraction": "Numerical figure-caption values; no pixel digitization."
+    },
+    {
+      "id": "geracitano-2012",
+      "citation": "Geracitano et al. (2012), Frontiers in Neural Circuits 6:32",
+      "url": "https://doi.org/10.3389/fncir.2012.00032",
+      "locator": "Results: Actions of zolpidem and diazepam on uIPSCs mediated by Imp neurons of amygdala; electrophysiology and chemicals methods",
+      "extraction": "Numerical Results paragraph; no pixel digitization."
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": "diazepam-acute-cortex-chapman-2025",
+      "label": "Diazepam: acute cortical synaptic decay",
+      "compoundId": "diazepam",
+      "concentrationNM": 1000,
+      "endpoint": "decay-potentiation-percent",
+      "observed": {
+        "mean": 72.5,
+        "sem": 12.9,
+        "unit": "%",
+        "basis": "Reported mean of within-cell percentage changes",
+        "baselineMs": 50,
+        "baselineSemMs": 2.87,
+        "treatedMs": 86.2,
+        "treatedSemMs": 6.97,
+        "cells": 5,
+        "cultures": 3
+      },
+      "preparation": "Rat cortical pyramidal neurons, DIV 20–22; 7 days vehicle, then acute diazepam; mIPSCs at −70 mV with AMPA, NMDA and sodium-channel blockers.",
+      "independence": "independent-study",
+      "comparisonClass": "cross-preparation",
+      "fitUse": "none",
+      "sourceId": "chapman-2025",
+      "limitations": [
+        "Cortical miniature IPSC decay is compared with a rat hippocampal spontaneous IPSC peak-to-25% calibration reduced to a single exponential.",
+        "SEM describes this experiment, not model uncertainty or a human prediction interval.",
+        "Observed mean of within-cell changes differs from the ratio of the published group means; the reported 72.5% is used directly.",
+        "The comparison bypasses pharmacokinetics and substitutes bath concentration for modeled unbound brain concentration."
+      ]
+    },
+    {
+      "id": "diazepam-chronic-cortex-chapman-2025",
+      "label": "Diazepam: chronic tolerance is not modeled",
+      "compoundId": "diazepam",
+      "concentrationNM": 1000,
+      "endpoint": "decay-potentiation-percent",
+      "observed": {
+        "mean": 25.6,
+        "sem": 7.48,
+        "unit": "%",
+        "basis": "Reported mean of within-cell percentage changes",
+        "baselineMs": 43.7,
+        "baselineSemMs": 2.92,
+        "treatedMs": 54.3,
+        "treatedSemMs": 3,
+        "cells": 5,
+        "cultures": 3
+      },
+      "preparation": "Same cortical assay after 7 days of 1 µM diazepam, followed by an acute 1 µM challenge during recording.",
+      "independence": "independent-study",
+      "comparisonClass": "unsupported-chronic-history",
+      "fitUse": "none",
+      "sourceId": "chapman-2025",
+      "limitations": [
+        "The existing concentration-only decay mapping contains no exposure-history or tolerance state. Its acute output can be shown only as a counterfactual reference, not a simulated chronic regimen.",
+        "Adding a tolerance rate from a single endpoint would not identify adaptation or recovery kinetics.",
+        "This is a different cortical preparation and decay endpoint from the hippocampal calibration."
+      ]
+    },
+    {
+      "id": "diazepam-amygdala-geracitano-2012",
+      "label": "Diazepam: mouse amygdala synaptic decay",
+      "compoundId": "diazepam",
+      "concentrationNM": 1000,
+      "endpoint": "decay-potentiation-percent",
+      "observed": {
+        "mean": 49.079754601226995,
+        "sem": null,
+        "unit": "%",
+        "basis": "Derived ratio of reported group means: 100 × (24.3 / 16.3 − 1)",
+        "baselineMs": 16.3,
+        "baselineSemMs": 3.9,
+        "treatedMs": 24.3,
+        "treatedSemMs": 4.2,
+        "recordedPairs": 3
+      },
+      "preparation": "Mouse amygdala intercalated medial paracapsular neurons in acute slices; paired unitary IPSCs, 34 ±1 °C; diazepam bath application 12.5 ±1.5 minutes.",
+      "independence": "independent-study",
+      "comparisonClass": "cross-preparation",
+      "fitUse": "none",
+      "sourceId": "geracitano-2012",
+      "limitations": [
+        "Species, region, receptor-subunit composition, preparation and IPSC endpoint differ from the rat hippocampal calibration.",
+        "The ratio of group means is not the mean of paired ratios. Its SEM cannot be recovered without paired covariance or individual recordings.",
+        "Only three recorded pairs contributed; this does not characterize a population-wide regional response.",
+        "No parameters are fitted to this benchmark."
+      ]
+    }
+  ]
+}

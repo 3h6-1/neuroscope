@@ -67,7 +67,23 @@ Every target has `evidenceType`, `modelAssumption`, `affinityLabel` and evidence
 | Ketamine NMDA | 500 nM | Illustrative K\*; [NMDA studies](https://pmc.ncbi.nlm.nih.gov/articles/PMC5641405/) do not establish a universal voltage-/subunit-independent affinity. |
 | Fluoxetine SERT | 1 nM | Rounded illustrative K\*, supported qualitatively by [human transporter binding research](https://pubmed.ncbi.nlm.nih.gov/9537821/) |
 
-Ki, Kd, IC50 and EC50 are distinct. Species, receptor subtype, radioligand, substrate concentration, receptor state and assay pathway affect measured values. A receptor binding Ki does not determine channel-activation EC50 or a clinical response. The binding table above describes the occupancy layer. The separate functional response layer below uses measured endpoints where available. Legacy `efficacy` coefficients remain illustrative fallbacks, and are bypassed when an applicable functional assay is present. Neither numerical precision nor a source link implies whole-human precision.
+Ki, Kd, IC50 and EC50 are distinct. Species, receptor subtype, radioligand, substrate concentration, receptor state and assay pathway affect measured values. A receptor binding Ki does not determine channel-activation EC50 or a clinical response. The table above records the binding layer; aripiprazole D2 occupancy additionally uses the explicitly separate human PET calibration below when available. The functional response layer uses measured endpoints where available. Legacy `efficacy` coefficients remain illustrative fallbacks, and are bypassed when an applicable functional assay is present. Neither numerical precision nor a source link implies whole-human precision.
+
+## Human PET occupancy calibration and external comparison
+
+For newly curated aripiprazole D2 profiles, a target-specific signal compartment uses the model fit in [Kim et al. (2012)](https://doi.org/10.1038/jcbfm.2011.180):
+
+```text
+dCe/dt = 0.725 h⁻¹ × (Cp − Ce)
+PET occupancy = Ce / (8.63 ng/mL + Ce)
+concentration in ng/mL = concentration in nM × molecular weight in g/mol / 1000
+```
+
+`Ce` is a **total-plasma-equivalent effect signal**, separate from both mass-bearing compartments. It consumes no drug amount and is not unbound brain concentration, BBB permeability, Kp,uu or a molecular binding rate. Each fixed PK step uses exact exponential relaxation toward the interval mean plasma concentration; substituting that mean for a continuously changing input remains a numerical approximation. The fitted maximum is 100%. The app retains the measured binding Ki and the independent functional assay; this PET calibration changes the occupancy estimate, not those quantities or the functional response concentration.
+
+The single-compound PET occupancy already represents in-vivo competition. Its occupancy odds are normalized to the endogenous baseline once when combined with the app's competition pool. Competition with other drugs remains an unvalidated transfer rule, not a measured PET mixture response.
+
+An external check uses [Ito et al. (2012)](https://doi.org/10.1371/journal.pone.0046488): four caudate/putamen group means, measured plasma means and the conditional approximation `Ce = Cp`. Mean absolute error changes from **20.811 to 4.117 percentage points**, with the largest corrected residual **8.066 points**. These group means share participants; they are not four independent experiments. Parameters were not retuned to those observations. The comparison is conditional on measured exposure and equilibrium, not a test of predicted plasma exposure or delay dynamics. See [the PET audit](research-validation-pet.md) for observations, calibration-versus-test provenance and limitations.
 
 ## Functional concentration–response evidence
 
@@ -80,7 +96,7 @@ assay response = Emax × w/(1+w)
 
 An EC50 gives half of the selected assay maximum; an uptake/current-inhibition IC50 gives half of the selected inhibition maximum. A PAM maximum describes the fractional increase above the GABA control, so 1.91 means 191% potentiation (2.91 times control at saturation). Hill slopes and inhibition asymptotes without measured support are labeled assumptions. At the reported midpoint the reconstructed endpoint is exactly half maximal, but the curve is not a new fit to raw experimental observations or a human prediction interval.
 
-The input C is modeled unbound brain concentration substituted for experimental bath concentration. This, omitted receptor subtypes/signaling bias, endogenous tone, and application of a fixed-voltage channel experiment to a generic network are assumptions. Ketamine's selected IC50 includes its specific magnesium and voltage conditions; there is no dynamic voltage/use-dependent blockade model. The independent Ki-based occupancy calculation is **unchanged** by the functional curve and remains an estimated proxy when its affinity is not measured.
+The input C is modeled unbound brain concentration substituted for experimental bath concentration. This, omitted receptor subtypes/signaling bias, endogenous tone, and application of a fixed-voltage channel experiment to a generic network are assumptions. Ketamine's selected IC50 includes its specific magnesium and voltage conditions; there is no dynamic voltage/use-dependent blockade model. Binding occupancy is **unchanged** by the functional curve and remains an estimated proxy when its affinity is not measured. The separate aripiprazole PET signal is not substituted for this functional concentration.
 
 To connect these assays to the simulation, when an orthosteric functional curve is available the estimated activity proxy is `(Acontrol + Σw_i Emax_i)/(1+Σw_i)`. For transporter inhibition, remaining capacity is `1−Σw_i Imax_i/(1+Σw_i)`. Unmeasured receptor competitors use weights `(C/K*)/(1+w0)` and fallback efficacy; transporters use `C/K*`. The normalization preserves the legacy response when an assay-backed ligand approaches zero concentration. These cross-assay pools and baseline interpolation are explicit modeling choices, not measured combination responses or a mechanistic derivation from receptor reserve. PAMs use gain `1+Σw_i Pmax_i/(1+Σw_i)`; channel blockers use remaining fraction `1−Σw_i Imax_i/(1+Σw_i)`. Without functional data, the previous binding-based response rules below are retained. Every target panel distinguishes functional response evidence from occupancy evidence.
 
@@ -143,6 +159,8 @@ Aripiprazole's fraction is derived from the 2.12-fold AUC ratio with quinidine; 
 
 An interaction without both a curated potency and substrate fraction is labeled **unquantified**, and no numerical clearance change is applied. This does not establish absence of an interaction. Human-study cards preserve their actual population, regimen and endpoint separately from current simulation values. The prior shared 100 nM/50% assumptions remain only in imported legacy PK checkpoints, visibly labeled for replay; fresh experiments use the evidence model.
 
+The [interaction benchmark](research-validation-interactions.md) reconstructs a published static comparison at study-context concentrations. For desipramine, the parent-only AUC ratio is **1.017**, versus **5.2 observed**; including measured metabolite pools gives **1.731**. The paper's animal-derived hepatic enrichment sensitivity gives **3.946–5.086**. The benchmark uses literature substrate fractions, not fractions inferred from the comparison endpoint. Its concentration inputs come from a different study, so it is a retrospective reconstruction rather than matched-participant or prospective validation. The liver range is not a confidence interval. These calculations do not create a dynamic metabolite system in the live simulation, and neither bupropion nor fluoxetine's full clinical interaction is validated. The aripiprazole/quinidine and LSD/paroxetine results used to derive live clearance fractions remain calibration data and are excluded from independent checks.
+
 ### Pharmacodynamic combinations
 
 For competitive orthosteric binding, each selected drug has weight `wi = Cb,i/K*i`, and an endogenous drive `w 0` represents the transmitter:
@@ -179,6 +197,8 @@ For identified diazepam alone at the GABAA target, [Cao et al. (2018)](https://d
 
 The [synaptic evidence audit](research-neural.md) records SDs, sample sizes, bath pretreatment, interpolation and transfer assumptions. Below 10 nM, linear interpolation is estimated; between measured positive nodes interpolation uses log concentration. Above 1000 nM the final anchor is held and marked outside the measured range, not asserted to be a measured plateau. An unmatched GABAA drug/mixture disables this single-compound calibration and retains estimated generic modulation. No whole-human or dose-to-firing calibration is claimed.
 
+[Independent preparation comparisons](research-validation-neural.md) expose a transfer limitation. At 1 µM the model predicts `100 × (87/41 − 1) = 112.2%` decay prolongation. An acute rat cortical experiment reports **72.5 ± 12.9% SEM**, and mouse amygdala group means imply **49.1%**. The latter has no derived error bar because paired covariance is unavailable. These observations use different event types and preparations, so their residuals remain visible without fitting an unsupported universal correction. A seven-day diazepam pretreatment result of **25.6 ± 7.48% SEM** is classified **unsupported**: no tolerance onset, adaptation or recovery kinetics exist in the concentration-only model.
+
 **All remaining target-to-current shifts and amplitude gains are estimates.** They are neither fitted to human electrophysiology nor implied by the receptor assays. For auditability, with `δT` denoting change in the target activity proxy (set GABAincrement and the GABA bias term to zero on the calibrated decay path):
 
 ```text
@@ -207,4 +227,4 @@ These stages have no assigned durations, uptake constants, repair rates or acute
 
 `tests/catalog.test.js` checks all ten canonical identities, alias coverage, structure CIDs, explicit dimensionality, elemental composition, formal charge, valid molecular graphs, bond geometry, source checksums, parameter evidence fields, known stereoisomers and racemate labeling. It also guards against treating B12 as an acute receptor ligand, and ensures that illustrative IC50-based scales are not mislabeled as measured Ki values.
 
-The separate PK and neural tests check numerical behavior of the implemented equations. Passing tests establishes internal consistency of this software, not empirical calibration of an entire brain, a drug combination or a particular person. The supported claims are the molecular identities, sourced pharmacological relationships and behavior of the stated reduced equations. All additional interpretations remain outside the model.
+The separate PK and neural tests check numerical behavior of the implemented equations. `npm run validate:science` reproduces the curated PET, synaptic and interaction comparisons, including their discrepancies; the in-app Validation panel exposes the same evidence classes. See [VALIDATION.md](VALIDATION.md). Passing automated checks establishes correct execution and regression behavior, not an empirically validated entire brain, drug combination or particular person. The experimental comparisons establish only the scoped endpoint agreements and mismatches described above.

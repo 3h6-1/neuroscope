@@ -1,7 +1,9 @@
 /** All catalog, imported-profile and lookup content is treated as untrusted text. */
-import { DIAZEPAM_NEURAL_CALIBRATION } from './neural-evidence.js';
+import { DIAZEPAM_NEURAL_CALIBRATION, diazepamInhibitionDecay } from './neural-evidence.js';
 import { interactionProfileEvidence } from './interaction-evidence.js';
 import { REGIONAL_ATLAS } from './regional-evidence.js';
+import { PET_VALIDATION_EVIDENCE } from './pet-occupancy.js';
+import neuralValidation from '../public/data/validation-neural.json' with { type: 'json' };
 export function escapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
@@ -149,6 +151,29 @@ ${refs(assay.sourceIds,sources)}
 <p class="field-note">An assay maximum is relative to its experimental reference; it is not a universal intrinsic efficacy or a percentage change in human neuron firing. Applying this curve to the free-brain concentration proxy, background activity and mixtures is an estimated mapping.</p></section>`;
 }
 
+function petOccupancyContent(calibration, sources, state) {
+  if (!calibration) return '';
+  const parameterInterval = value => Number.isFinite(value?.lower) && Number.isFinite(value?.upper) ? ` · published parameter 95% CI ${referenceNumber(value.lower)}–${referenceNumber(value.upper)} ${e(value.unit || '')}` : '';
+  return `<section class="assay-evidence"><h3>Human PET occupancy model</h3><p>${pill('Published model calibration')} ${pill('Conditional external comparison')}</p>
+<p>Striatal D2/3 PET occupancy uses a separate effect compartment driven by total plasma concentration. This replaces the unbound-brain/Ki approximation for occupancy only. Functional activation still uses its separate cellular assay; receptor occupancy does not measure neuron firing or validate cognition.</p>
+${calibration.context ? `<p>${e(calibration.context)}</p>` : ''}
+<table><tbody>${rows([
+    ['Occupancy EC50',`${referenceNumber(calibration.ec50NgML)} ng/mL · total-plasma-equivalent effect concentration${parameterInterval(calibration.ec50Uncertainty)}`],
+    ['Effect equilibration rate',`${referenceNumber(calibration.effectRatePerHour)} h⁻¹${parameterInterval(calibration.effectRateUncertainty)}`],
+    ['Maximum occupancy',`${percent(calibration.maximum)} · ${e(calibration.maximumEvidence || 'Maximum provenance not supplied')}`],
+    ...(state ? [['Current effect compartment',`${referenceNumber(state.effectSiteNgML)} ng/mL`],['Single-compound occupancy estimate',percent(state.petSingleCompoundOccupancy)]] : []),
+  ])}</tbody></table>
+<p>dC<sub>e</sub>/dt = k<sub>e0</sub>(C<sub>plasma</sub> − C<sub>e</sub>); occupancy = maximum × C<sub>e</sub>/(EC50 + C<sub>e</sub>). C<sub>e</sub> is a response-delay state, not a measured brain tissue concentration. The clinical curve already incorporates baseline endogenous competition. Parameter confidence intervals are not individual prediction intervals.</p>
+<p>Independent PET group means are compared under the conditional assumption C<sub>e</sub> ≈ C<sub>plasma</sub>. Missing plasma histories prevent validation of the full transient response. Mixtures, extra-striatal transfer, metabolites and neural/cognitive effects remain unvalidated. Open <strong>Validation</strong> for observed values and residual errors.</p>${refs(calibration.sourceIds,sources)}</section>`;
+}
+
+function neuralTransferContent() {
+  const acute = neuralValidation.benchmarks.find(item => item.id === 'diazepam-acute-cortex-chapman-2025');
+  const amygdala = neuralValidation.benchmarks.find(item => item.id === 'diazepam-amygdala-geracitano-2012');
+  const predicted = 100 * (diazepamInhibitionDecay(acute.concentrationNM).inhibitionDecayMs / diazepamInhibitionDecay(0).inhibitionDecayMs - 1);
+  return `<div class="callout"><p><strong>Independent transfer discrepancies:</strong> at ${number(acute.concentrationNM)} nM, this curve predicts a ${number(predicted)}% decay increase. Independent cortical recordings report ${number(acute.observed.mean)} ± ${number(acute.observed.sem)}% SEM; a mouse amygdala study gives a ${number(amygdala.observed.mean)}% increase derived from group means. These are different preparations and decay endpoints; the mismatches remain visible rather than being fitted away.</p><p><strong>Chronic tolerance is not modeled.</strong> The concentration-only curve cannot reproduce exposure-history effects. Open <strong>Validation</strong> for the observations, uncertainties and residuals.</p><p>${neuralValidation.sources.map(source => link({title:source.citation,url:source.url})).join(' · ')}</p></div>`;
+}
+
 function neuralReferenceContent() {
   const calibration = DIAZEPAM_NEURAL_CALIBRATION;
   return `<h3>Diazepam: direct synaptic reference</h3><p>${pill('Measured rat-culture endpoints')} ${pill('Circuit transfer estimated')}</p>
@@ -156,7 +181,7 @@ function neuralReferenceContent() {
 <table><thead><tr><th>Bath concentration</th><th>Measured duration, mean ± SD</th><th>Cells</th></tr></thead><tbody>${calibration.points.map(p => `<tr><td>${number(p.concentrationNM)} nM</td><td>${number(p.durationMs)} ± ${number(p.sdMs)} ms</td><td>${number(p.cells)}</td></tr>`).join('')}</tbody></table>
 <p>${link({title:calibration.citation,url:calibration.sourceUrl})}</p>
 <p>${e(calibration.transformation)} ${e(calibration.transferAssumption)}</p>
-<p>Intermediate durations use an estimated interpolation: linear below 10 nM, linear in log concentration between measured nonzero points. Above 1,000 nM the last value is held and labeled outside the measured range. An unmatched GABA<sub>A</sub> drug or mixture uses the estimated fallback instead of extending this single-drug experiment. The circuit does not also apply the generic GABA gain to this calibrated pathway.</p>`;
+<p>Intermediate durations use an estimated interpolation: linear below 10 nM, linear in log concentration between measured nonzero points. Above 1,000 nM the last value is held and labeled outside the measured range. An unmatched GABA<sub>A</sub> drug or mixture uses the estimated fallback instead of extending this single-drug experiment. The circuit does not also apply the generic GABA gain to this calibrated pathway.</p>${neuralTransferContent()}`;
 }
 
 export function neuralEvidenceContent(modulation = {}, migrationNote) {
@@ -172,12 +197,13 @@ export function neuralEvidenceContent(modulation = {}, migrationNote) {
   };
   return `<span>INHIBITORY SYNAPTIC DECAY</span><p><strong>${number(modulation.inhibitionDecayMs)} ms</strong> · equivalent exponential τ</p><p>${pill(statuses[value.status] || 'Evidence not supplied')}</p>
 ${Number.isFinite(value.concentrationNM) ? `<p>Brain concentration proxy: ${number(value.concentrationNM)} nM.</p>` : ''}
-<p>Rat-culture reference; transfer to this circuit is estimated. Other current gains and population-response mappings remain estimated. Selected regional target weights use PET references.</p>${migrationNote ? `<p class="migration-note"><strong>Imported experiment:</strong> ${e(migrationNote)}</p>` : ''}`;
+<p>Rat-culture reference; transfer to this circuit is estimated. Independent cortical and amygdala recordings show smaller diazepam decay changes than this curve. Chronic tolerance is not modeled. See <strong>Validation</strong> for those discrepancies.</p><p>Other current gains and population-response mappings remain estimated. Selected regional target weights use PET references; they do not validate firing or cognition.</p>${migrationNote ? `<p class="migration-note"><strong>Imported experiment:</strong> ${e(migrationNote)}</p>` : ''}`;
 }
 
 export function modelContent(catalog) {
   return `<h2>From exposure to regional activity and a workspace.</h2>
 <div class="callout"><p>NeuroScope links virtual plasma exposure, an unbound brain compartment, molecular targets, a spiking circuit, 30 regional population models, and an explicit memory-and-association workspace. It is a computational teaching model. Its traces do not predict a person's symptoms, cognition, treatment response or the safety of a drug combination.</p></div>
+<p>Open <strong>Validation</strong> in the header to compare selected outputs with published observations. The report separates conditional human PET comparisons, neural preparation-transfer discrepancies, literature-reconstructed enzyme diagnostics and unsupported chronic responses. Calibration agreement and software tests are not independent biological validation.</p>
 <h3>Anatomy and regional dynamics</h3>
 <p>The cortical surface uses the MRI-derived fsaverage5 reference mesh distributed by Nilearn. Its folds are anatomical geometry. The 30 nonsensory functional nodes and 132 connections are schematic, not registered patient anatomy or a measured connectome. Primary sensory processing is excluded from the dynamics; the intact reference surface still includes those anatomical areas.</p>
 <code>τE dE/dt = −E + σ(10gE E − 8gI I + delayed input + drive + bias + noise − 2.8)<br>τI dI/dt = −I + σ(8gE E − 3I + 0.4 + 0.25drive + bias + 0.7noise − 2.8)<br>σ(x) = 1/(1 + exp(−x))</code>
@@ -206,6 +232,7 @@ export function modelContent(catalog) {
 <h3>Binding, competition and fallback efficacy</h3>
 <code>wi = Cb,i/K*i; D = 1 + w0 + Σwi<br>θi = wi/D<br>Aorth = (w0 + Σwi εi)/D<br>Acontrol = w0/(1+w0)</code>
 <p>Orthosteric ligands compete with estimated endogenous drive w0. A partial agonist can increase or decrease activity relative to that baseline; occupancy is not a fixed blocking percentage. Binding occupancy uses a Ki-based approximation where available; assumed K* scales remain labeled binding proxies. Legacy efficacy coefficients ε remain illustrative only where a functional assay curve is unavailable. The profile identifies which path is used.</p>
+<p>A curated aripiprazole D2/3 PET pathway instead uses a published total-plasma-driven effect compartment for striatal occupancy. It retains the separate cellular functional-response curve. Its independent comparison supplies observed plasma concentrations and assumes effect-site equilibrium; it does not test the entire PK time course. See the profile for parameter provenance and <strong>Validation</strong> for remaining errors. PET occupancy does not validate firing or cognition.</p>
 <p>Transporter capacity uses sourced uptake-inhibition curves when available and an occupancy-based fallback otherwise. Binding and uptake inhibition are distinct outputs. This general target layer does not compute individual transport cycles or infer transmitter concentration from occupancy.</p>
 <code>θPAM = ΣwPAM/(1 + ΣwPAM)<br>θchannel = Σwchannel/(1 + Σwchannel)<br>A = min(1, Aorth · (1 + 2θPAM)) · (1 − θchannel)</code>
 <p>PAMs and channel blockers occupy separate pools. The equations above describe the fallback pathway: a PAM without a functional assay uses the estimated gain of 2. Sourced functional modulation replaces that gain where supplied. Channel reduction omits voltage and use dependence. Combined occupancy is the union-of-pools proxy 1−(1−θorth)(1−θPAM)(1−θchannel), not one physical binding-site fraction.</p>
@@ -231,6 +258,7 @@ export function helpContent() {
   return `<h2>Explore identity, exposure and response.</h2>
 <p>Choose a bundled compound or search by name, PubChem CID, molecular formula or SMILES. Use explicit search mode when automatic detection is ambiguous. A formula can match many constitutional and stereochemical isomers; select the intended result. Salt forms and stereoisomers are not automatically interchangeable.</p>
 <p>PubChem supplies identity and structure, not brain-effect predictions. An uncurated result can be inspected without assigning activity. To run it as a research profile, explicitly enter target mechanism, affinity scale and required PK values with their evidence. Manual parameters remain assumptions until independently supported.</p>
+<p>Choose <strong>Validation</strong> in the header or <strong>Compare with published experiments</strong> beside the live observations. Tables distinguish published measurements from previous/current model outputs, report residual errors and keep unsupported outcomes visible. These benchmarks run separately from your live experiment; PET occupancy comparisons do not validate firing or cognition.</p>
 <h3>Views</h3><table><tbody>${rows([
     ['Brain & workspace','Explore the cortical surface, select regional states, toggle cutaway/connections, inspect memory and the event journal, or ask a question. The optional language model is in Conversation settings.'],
     ['Bloodstream','Explore circulation, brain and organ context. Tracer motion is illustrative.'],
@@ -258,6 +286,7 @@ export function profileContent(profile = {}) {
   const enzymeNames = values => array(values).map(v => e(typeof v === 'string' ? v : v?.enzyme || 'Unknown')).join(', ') || 'None represented';
   const targetDetails = targets.map(t => `<h3>${e(targetNames[t.target] || t.target)}</h3><p>${pill(t.modelAssumption ? 'Assumed affinity scale' : t.evidenceType || t.evidence?.type)} ${e(actionNames[t.action] || t.action)}${t.subtype ? ` · ${e(t.subtype)}` : ''}</p>
 <p><strong>${e(t.affinityLabel || 'K* · unverified model scale')}: ${number(t.kiNM)} nM.</strong></p>${evidence(t.evidence, sources)}
+${!profile.custom ? petOccupancyContent(t.occupancyCalibration,sources) : ''}
 ${t.functionalAssay ? functionalAssayContent(t.functionalAssay,sources,{custom:profile.custom}) : `<p>${pill('Estimated functional response')} Model efficacy coefficient: ${number(t.efficacy)}. ${t.action === 'pam' ? 'Without a functional assay, the engine uses a separate estimated PAM gain of 2; this profile coefficient is not measured amplification.' : 'This fallback coefficient is illustrative even when the binding affinity is experimentally sourced.'}</p>${t.efficacyEvidence ? evidence(t.efficacyEvidence, sources) : ''}`}`).join('');
   const pkDetails = pk ? [ ['halfLifeH','Selected half-life','h'], ['freeFraction','Unbound plasma fraction',''], ['brainPartition','Unbound partition Kp,uu',''], ['brainEquilibrationH','Equilibration τ','h'] ].map(([key,name,unit]) => `<h3>${e(name)} · ${number(pk[key])}${unit ? ` ${e(unit)}` : ''}</h3>${evidence(pk.evidence?.[key], sources)}`).join('')
     : `<div class="callout"><p>${e(profile.qualitativeExposureNote || 'No acute pharmacokinetic values are assigned. Brain concentration and time course are unknown, not assumed zero.')}</p></div>`;
@@ -286,7 +315,7 @@ export function targetContent(state, catalog) {
   }
   const profiles = compounds(catalog), contributors = array(state.contributors), transporter = state.kind === 'transporter';
   const find = c => { const profile = profiles.find(p => p.id === c.id); return { profile, target:array(profile?.targets).find(t => t.target === state.id && t.action === c.action) }; };
-  const contributionRows = contributors.map(c => { const {profile,target} = find(c); return `<tr><td>${e(c.name || profile?.name || c.id)}<br>${pill(target?.modelAssumption ? 'Assumed affinity' : target?.evidenceType)}</td><td>${e(actionNames[c.action] || c.action)}<br>${e(c.site)}</td><td>${e(target?.affinityLabel || 'K* · unverified scale')}<br>${number(c.affinityNM)} nM</td><td>${percent(c.occupancy)}</td></tr>`; }).join('');
+  const contributionRows = contributors.map(c => { const {profile,target} = find(c); return `<tr><td>${e(c.name || profile?.name || c.id)}<br>${pill(c.occupancyCalibration ? 'PET occupancy model' : target?.modelAssumption ? 'Assumed affinity' : target?.evidenceType)}</td><td>${e(actionNames[c.action] || c.action)}<br>${e(c.site)}</td><td>${c.occupancyCalibration ? `PET EC50 ${referenceNumber(c.occupancyCalibration.ec50NgML)} ng/mL<br>Separate assay Ki ${number(c.affinityNM)} nM` : `${e(target?.affinityLabel || 'K* · unverified scale')}<br>${number(c.affinityNM)} nM`}</td><td>${percent(c.occupancy)}</td></tr>`; }).join('');
   const notes = contributors.map(c => { const {profile,target} = find(c); return target ? `<p><strong>${e(profile.name)}:</strong> ${e(target.evidence?.note || 'Evidence not supplied.')}</p>${refs(target.evidence?.sourceIds,profile.sources)}` : ''; }).join('');
   const functionalResponses = array(state.functionalResponses);
   const assayDetails = functionalResponses.map(response => {
@@ -301,12 +330,16 @@ export function targetContent(state, catalog) {
   ])}</tbody></table>
 <div class="callout"><p><strong>Response basis:</strong> ${e(state.responseBasis || 'Estimated binding-to-activity mapping')}.</p><p><strong>Occupancy evidence:</strong> ${e(state.occupancyEvidence || 'Binding-affinity approximation or explicitly assumed binding scale')}.</p><p>${transporter ? 'Sourced uptake inhibition and binding occupancy are distinct. The capacity proxy does not compute transmitter concentration.' : 'Occupancy and activation differ. Partial agonists can raise or lower activity against endogenous drive. PAMs amplify existing activity at a separate site; channel blockers reduce it separately.'} Assay-to-brain transfer, mixture pooling and target-to-network coupling remain estimates.</p></div>
 ${assayDetails}
+${contributors.filter(c=>c.occupancyCalibration).map(c=>petOccupancyContent(c.occupancyCalibration,profiles.find(p=>p.id===c.id)?.sources,c)).join('')}
+${contributors.filter(c=>c.occupancyCalibrationUnavailable).map(c=>`<p>${e(c.occupancyCalibrationUnavailable)}</p>`).join('')}
 ${contributors.length ? `<h3>Contributors at the current modeled brain exposure</h3><table><thead><tr><th>Compound / evidence</th><th>Action / site</th><th>Affinity scale</th><th>Site occupancy</th></tr></thead><tbody>${contributionRows}</tbody></table><p>Fractions from separate site pools cannot be added as one physical site occupancy. A zero-occupancy contributor may simply have zero current modeled brain exposure.</p>${notes}` : '<p>No selected compound contributes a supported mechanism here. Activity follows endogenous baseline; unlisted interactions remain outside the model.</p>'}`;
 }
 
 export function sourcesContent(catalog) {
   const sources = unique([...array(catalog?.sources), ...compounds(catalog).flatMap(p => array(p.sources)),
     ...compounds(catalog).flatMap(profile => interactionProfileEvidence(profile).sources),
+    ...PET_VALIDATION_EVIDENCE.sources,
+    ...neuralValidation.sources.map(source => ({id:source.id,title:source.citation,url:source.url})),
     ...Object.values(REGIONAL_ATLAS.maps).map(map => ({id:map.sourceId,title:map.sourceTitle,url:map.sourceUrl})),
     {title:'Hansen et al. (2022), human neurotransmitter receptor architecture',url:REGIONAL_ATLAS.citationUrl},
     {title:`Derived regional PET dataset · ${REGIONAL_ATLAS.license}`,url:REGIONAL_ATLAS.licenseUrl}, izhikevich,

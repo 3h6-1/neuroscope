@@ -8,6 +8,7 @@
  */
 import { validateFunctionalAssay, functionalResponse, responsePool } from './functional-response.js';
 import { computeMetabolicInteractions } from './interaction-evidence.js';
+import { validateOccupancyCalibration, advanceEffectSite, occupancyFromEffectSite } from './pet-occupancy.js';
 
 export const PK_DT_HOURS = 1 / 240;
 export const TARGET_IDS = Object.freeze(['SERT', 'DAT', 'NET', 'D2', 'HT2A', 'HT1A', 'GABAA', 'NMDA', 'ADENOSINE', 'NACHR']);
@@ -16,6 +17,7 @@ export const PHARMACOLOGY_LIMITATIONS = Object.freeze([
   'Bloodstream boluses are arbitrary virtual concentrations, not medication doses or a route-of-administration model.',
   'Brain is an unbound-equivalent compartment; free fractions, volumes, Kp,uu and equilibration are simplified and may be assumed.',
   'Affinity values from different assays are not necessarily directly comparable; occupancy is an equilibrium approximation.',
+  'Selected target occupancy uses an empirical human PET effect-compartment model. PET occupancy is distinct from functional activation; transfer to mixtures, regions and neural effects remains unvalidated.',
   'Active metabolites, regional distribution, tolerance and long-term adaptation are not dynamically modeled.',
   'Selected CYP interactions use measured parent Ki and study-derived clearance fractions. Liver exposure, pathway transfer and mixture additivity remain estimates; missing potency or clearance evidence leaves an interaction unquantified.',
   'Target changes drive a phenomenological neural network and cannot predict behavior, experience, safety or treatment response.',
@@ -81,6 +83,12 @@ export function validateCompound(profile) {
       validateFunctionalAssay(t.functionalAssay, action);
       const sources = new Set((p.sources || []).map(source => source.id));
       if (t.functionalAssay.sourceIds.some(id => !sources.has(id))) throw new TypeError('Functional assay refers to a missing source');
+    }
+    if (t.occupancyCalibration != null) {
+      if (target !== 'D2' || !['agonist', 'partial_agonist', 'antagonist'].includes(action)) throw new TypeError('The PET occupancy model supports orthosteric D2 mechanisms only');
+      if (t.kiNM == null) throw new TypeError('PET occupancy requires a separately labeled binding affinity');
+      positive(p.molecularWeight, 'molecularWeight for PET concentration conversion');
+      validateOccupancyCalibration(t.occupancyCalibration, p.sources || []);
     }
     return { ...t, target, action, ...(efficacy != null ? { efficacy } : {}) };
   });
@@ -151,10 +159,20 @@ export function computeTargets(exposures, compounds, endogenousDrive = DEFAULT_E
         if (targetName(definition.target) !== target || !Number.isFinite(definition.kiNM) || definition.kiNM <= 0 || definition.action === 'cofactor') continue;
         const action = actionName(definition.action);
         const concentrationNM = finite(exposure.brainNM ?? 0, `${profile.id} brain concentration`);
+        const hasPETState = exposure.effectSiteNM?.[target] !== undefined;
+        const calibration = !profile.custom && hasPETState ? definition.occupancyCalibration : null;
+        const effectSiteNM = calibration ? finite(exposure.effectSiteNM?.[target] ?? 0, `${profile.id} PET effect-site concentration`) : null;
+        const petOccupancy = calibration ? occupancyFromEffectSite(effectSiteNM, profile.molecularWeight, calibration) : null;
+        // A PET concentration-occupancy curve already incorporates baseline
+        // endogenous competition. Normalize its odds to the current baseline
+        // once; additional drug competition is an explicitly unvalidated rule.
+        const weight = calibration ? (1 + drive) * petOccupancy / Math.max(1e-12, 1 - petOccupancy) : concentrationNM / definition.kiNM;
         candidates.push({ id: profile.id, name: profile.name, action, concentrationNM,
-          affinityNM: definition.kiNM, efficacy: definition.efficacy ?? 0, weight: concentrationNM / definition.kiNM,
+          affinityNM: definition.kiNM, efficacy: definition.efficacy ?? 0, weight, functionalWeight: concentrationNM / definition.kiNM,
           custom: Boolean(profile.custom),
-          bindingEvidence: definition.evidenceType === 'assay' && !profile.custom ? 'assay-derived binding model' : 'estimated binding proxy',
+          ...(!profile.custom && definition.occupancyCalibration && !hasPETState ? { occupancyCalibrationUnavailable: 'PET effect-site history not supplied; using the original assay-based binding approximation.' } : {}),
+          bindingEvidence: calibration ? 'human PET occupancy calibration; conditional external benchmark only' : definition.evidenceType === 'assay' && !profile.custom ? 'assay-derived binding model' : 'estimated binding proxy',
+          ...(calibration ? { occupancyCalibration: calibration, effectSiteNM, effectSiteNgML: effectSiteNM * profile.molecularWeight / 1000, petSingleCompoundOccupancy: petOccupancy } : {}),
           ...(definition.functionalAssay ? { functionalAssay: definition.functionalAssay } : {}),
           ...(!profile.custom && definition.neuralCalibrationId ? { neuralCalibrationId: definition.neuralCalibrationId } : {}),
         });
@@ -174,14 +192,18 @@ export function computeTargets(exposures, compounds, endogenousDrive = DEFAULT_E
     const orthostericOccupancy = sum(orthosteric) / denominator;
     const allostericOccupancy = sum(allosteric) / pamDenominator;
     const channelOccupancy = sum(channel) / channelDenominator;
-    let activity = transporter ? 1 - orthostericOccupancy : drive / denominator + orthosteric.reduce((n, c) => n + c.weight * c.efficacy / denominator, 0);
+    // PET calibrates displacement only; it does not replace a functional
+    // concentration-response model, even at zero brain concentration or when
+    // an imported profile lacks a functional assay.
+    const functionalDenominator = 1 + (transporter ? 0 : drive) + orthosteric.reduce((n, c) => n + c.functionalWeight, 0);
+    let activity = transporter ? 1 - orthostericOccupancy : drive / functionalDenominator + orthosteric.reduce((n, c) => n + c.functionalWeight * c.efficacy / functionalDenominator, 0);
     // Functional endpoints get their own response pool, never the Ki-based
     // occupancy denominator. Baseline interpolation and cross-assay pooling
     // are declared assumptions even when EC50/IC50/Emax are measurements.
     if (orthosteric.some(c => c.functionalAssay && c.concentrationNM > 0)) {
       // Normalize legacy ligand weights by endogenous drive so introducing
       // an infinitesimal assay-backed ligand cannot jump an existing mixture.
-      const pool = responsePool(orthosteric, c => transporter ? 1 : c.efficacy, c => c.weight / (transporter ? 1 : 1 + drive));
+      const pool = responsePool(orthosteric, c => transporter ? 1 : c.efficacy, c => c.functionalWeight / (transporter ? 1 : 1 + drive));
       activity = transporter ? 1 - pool.weightedResponse / pool.denominator : (baselineActivity + pool.weightedResponse) / pool.denominator;
     }
     const pamPool = responsePool(allosteric, () => 2);
@@ -200,7 +222,7 @@ export function computeTargets(exposures, compounds, endogenousDrive = DEFAULT_E
       endogenousDrive: drive, contributors,
       functionalResponses,
       responseBasis: functionalResponses.length ? (candidates.some(c => c.custom && c.functionalAssay) ? 'Includes user-supplied assay hypotheses; estimated transfer to brain and mixture response' : 'Experimental assay curve; estimated transfer to brain and mixture response') : 'Estimated activity from binding model and assumed efficacy',
-      occupancyEvidence: candidates.some(c => c.bindingEvidence === 'estimated binding proxy') ? 'Estimated binding proxy; at least one affinity scale is assumed' : 'Assay-derived binding model; not measured in-vivo occupancy',
+      occupancyEvidence: candidates.some(c => c.occupancyCalibration) ? 'Includes human PET effect-compartment calibration; external aggregate comparison is conditional, and mixture competition remains unvalidated' : candidates.some(c => c.bindingEvidence === 'estimated binding proxy') ? 'Estimated binding proxy; at least one affinity scale is assumed' : 'Assay-derived binding model; not measured in-vivo occupancy',
       interpretation: transporter ? 'Fractional transport capacity; inhibition is 1 − activity.' : 'Illustrative receptor drive, not a clinical effect or firing rate.',
     };
   }
@@ -243,7 +265,10 @@ export class PharmacologySimulation {
     if (!support.supported) return { id: compoundId, ...support };
     const amount = initialPlasmaNM * this.options.plasmaVolumeL;
     let record = this.records[compoundId];
-    if (!record) record = this.records[compoundId] = { id: compoundId, active: true, plasmaAmountNMol: 0, brainAmountNMol: 0, initialAmountNMol: 0, eliminatedNMol: 0, removedNMol: 0, clearanceFactor: 1 };
+    if (!record) record = this.records[compoundId] = { id: compoundId, active: true, plasmaAmountNMol: 0, brainAmountNMol: 0, initialAmountNMol: 0, eliminatedNMol: 0, removedNMol: 0, clearanceFactor: 1, effectSiteNM: Object.fromEntries(profile.targets.filter(t => !profile.custom && t.occupancyCalibration).map(t => [t.target, 0])) };
+    // An inactive profile may have been edited or replaced after removal.
+    // Rebuild only its signal state while retaining the cumulative mass ledger.
+    if (!record.active) record.effectSiteNM = Object.fromEntries(profile.targets.filter(t => !profile.custom && t.occupancyCalibration).map(t => [t.target, 0]));
     record.active = true; record.plasmaAmountNMol += amount; record.initialAmountNMol += amount;
     this.ledger.push({ type: 'exposure', id: compoundId, timeHours: this.timeHours, concentrationNM: initialPlasmaNM, amountNMol: amount });
     return { supported: true, id: compoundId, exposure: this._exposure(record) };
@@ -254,6 +279,7 @@ export class PharmacologySimulation {
     if (!record?.active) return false;
     const amount = record.plasmaAmountNMol + record.brainAmountNMol;
     record.removedNMol += amount; record.plasmaAmountNMol = 0; record.brainAmountNMol = 0; record.active = false;
+    if (record.effectSiteNM) for (const target of Object.keys(record.effectSiteNM)) record.effectSiteNM[target] = 0;
     this.ledger.push({ type: 'remove', id: compoundId, timeHours: this.timeHours, amountNMol: amount });
     return true;
   }
@@ -314,8 +340,13 @@ export class PharmacologySimulation {
     for (const record of Object.values(this.records)) {
       if (!record.active) continue;
       record.clearanceFactor = factors[record.id];
-      const rates = this._rates(this.compounds.get(record.id), record.clearanceFactor);
+      const profile = this.compounds.get(record.id);
+      const rates = this._rates(profile, record.clearanceFactor);
       const result = propagateTwoCompartment(record.plasmaAmountNMol, record.brainAmountNMol, rates, this.options.stepHours);
+      for (const target of profile.targets.filter(t => !profile.custom && t.occupancyCalibration)) {
+        const meanPlasmaNM = (record.plasmaAmountNMol + result.plasmaAmount) / (2 * this.options.plasmaVolumeL);
+        record.effectSiteNM[target.target] = advanceEffectSite(record.effectSiteNM[target.target], meanPlasmaNM, target.occupancyCalibration.effectRatePerHour, this.options.stepHours);
+      }
       record.plasmaAmountNMol = result.plasmaAmount;
       record.brainAmountNMol = result.brainAmount;
       record.eliminatedNMol += result.eliminatedAmount;
@@ -326,7 +357,7 @@ export class PharmacologySimulation {
   _exposure(record) {
     const profile = this.compounds.get(record.id);
     const plasmaNM = record.plasmaAmountNMol / this.options.plasmaVolumeL;
-    return { ...record, name: profile.name, plasmaNM, freePlasmaNM: plasmaNM * profile.pk.freeFraction, brainNM: record.brainAmountNMol / this.options.brainVolumeL, totalAmountNMol: record.plasmaAmountNMol + record.brainAmountNMol, terminalHalfLifeCalibrated: this._rates(profile, 1).calibrated, profileAssumptions: profile.pk.evidence || null };
+    return { ...record, effectSiteNM: clone(record.effectSiteNM || {}), name: profile.name, plasmaNM, freePlasmaNM: plasmaNM * profile.pk.freeFraction, brainNM: record.brainAmountNMol / this.options.brainVolumeL, totalAmountNMol: record.plasmaAmountNMol + record.brainAmountNMol, terminalHalfLifeCalibrated: this._rates(profile, 1).calibrated, profileAssumptions: profile.pk.evidence || null };
   }
 
   get stats() {
@@ -352,6 +383,11 @@ export class PharmacologySimulation {
     for (const record of Object.values(data.records)) {
       if (!checked.compounds.has(record.id)) throw new TypeError('Checkpoint refers to unknown compound');
       for (const key of ['plasmaAmountNMol', 'brainAmountNMol', 'initialAmountNMol', 'eliminatedNMol', 'removedNMol']) finite(record[key], key);
+      const profile = checked.compounds.get(record.id);
+      const calibratedTargets = profile.targets.filter(t => !profile.custom && t.occupancyCalibration).map(t => t.target);
+      if (record.effectSiteNM !== undefined && (!record.effectSiteNM || typeof record.effectSiteNM !== 'object' || Array.isArray(record.effectSiteNM))) throw new TypeError('Invalid PET effect-site state');
+      if (Object.keys(record.effectSiteNM || {}).some(key => !calibratedTargets.includes(key))) throw new TypeError('Unknown PET effect-site target');
+      for (const target of calibratedTargets) finite(record.effectSiteNM?.[target], 'PET effect-site concentration');
     }
     this.options = checked.options; this.compounds = checked.compounds; this.endogenousDrive = checked.endogenousDrive;
     this.records = Object.assign(Object.create(null), data.records);

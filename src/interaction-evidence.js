@@ -88,6 +88,13 @@ export function inhibitionWeight(freeParentNM, assay) {
   return assay.components.reduce((total, c) => total + freeParentNM * unitFraction(c.parentFraction, 'parent fraction') / (positive(c.kiNM, 'Ki') * unitFraction(c.microsomalUnboundFraction, 'microsomal unbound fraction')), 0);
 }
 
+/** Static competitive inhibition; fm is a specified study/model estimate. */
+export function staticClearanceFactor(fractionMetabolized, weight) {
+  if (!Number.isFinite(fractionMetabolized) || fractionMetabolized < 0 || fractionMetabolized > 1) throw new RangeError('Clearance fraction must be between zero and one');
+  if (!Number.isFinite(weight) || weight < 0) throw new RangeError('Inhibition weight must be finite and nonnegative');
+  return 1 - fractionMetabolized + fractionMetabolized / (1 + weight);
+}
+
 /**
  * Only curated parent assays + a substrate-specific derived fraction change
  * elimination. Unknown fractions/potencies produce explicit unresolved rows.
@@ -116,7 +123,7 @@ export function computeMetabolicInteractions(exposures, compounds, { includeEvid
       const weight = known.reduce((sum, i) => sum + inhibitionWeight(i.freeNM, i.assay), 0);
       const modeled = Boolean(row && known.length);
       const fraction = modeled ? clearanceFractionFromAUCR(row.observedAUCR) : 0;
-      const clearanceFactor = modeled ? 1 - fraction + fraction / (1 + weight) : null;
+      const clearanceFactor = modeled ? staticClearanceFactor(fraction, weight) : null;
       // Multiple enzyme fractions are not independently multiplied: additional
       // pathways need a jointly validated total-clearance allocation first.
       if (modeled) factors[exposure.id] -= 1 - clearanceFactor;

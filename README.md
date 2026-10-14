@@ -1,6 +1,6 @@
 # NeuroScope — Brain & Cognition Lab
 
-**NeuroScope 3.2.0** is an interactive 3D browser program for exploring brain-active molecules, circulation, blood–brain exchange, target interactions, regional activity and a symbolic cognitive workspace. It does **not** implement a complete human brain or predict human consciousness or intelligence. Written in JavaScript with Three.js, it combines sourced molecular structures and cortical surface anatomy with explicitly bounded computational models. Numerical engines run independently of rendering.
+**NeuroScope 3.3.0** is an interactive 3D browser program for exploring brain-active molecules, circulation, blood–brain exchange, target interactions, regional activity and a symbolic cognitive workspace. It does **not** implement a complete human brain or predict human consciousness or intelligence. Written in JavaScript with Three.js, it combines sourced molecular structures and cortical surface anatomy with explicitly bounded computational models. Numerical engines run independently of rendering.
 
 [Open NeuroScope](https://3h6-1.github.io/neuroscope/) · [GitHub source](https://github.com/3h6-1/neuroscope)
 
@@ -11,6 +11,7 @@ Use Node.js 20.19+ or 22+ and a browser with WebGL 2.
 ```sh
 npm ci
 npm test
+npm run validate:science
 npm run dev
 ```
 
@@ -42,6 +43,7 @@ Serve `dist/` through an HTTP server. Opening `index.html` with `file://` will n
 - **Synapse:** follow serotonin release, diffusion, binding, SERT reuptake, recycling and clearance in the retained stochastic microdomain. The general model's SERT inhibitor load drives an illustrative connection to this view.
 - **Structure:** inspect atoms, bonds, hydrogens and stereochemistry. The library also includes serotonin and the experimental SERT structure 5I71 with its bound ligand. Experimental protein geometry remains static.
 - **Targets and interactions:** compare transporter inhibition, antagonism, partial agonism, positive allosteric modulation and channel blockade. Occupancy and activation are separate quantities. Evidence notes distinguish assay values from model assumptions.
+- **Validation:** inspect published observations alongside calculated values, errors, experimental conditions and unresolved discrepancies. Calibration inputs, conditional external comparisons and retrospective interaction reconstructions are labeled separately.
 
 ### Find a molecule
 
@@ -104,11 +106,17 @@ SERT uses the experimental **3.15 Å 5I71 crystal structure**, an engineered con
 
 The PK system conserves modeled amounts across plasma, a brain unbound-equivalent compartment and an elimination ledger. Binding occupancy and functional response are calculated separately: selected measured EC50/IC50 and assay maxima now replace generic response coefficients, while Ki/Kd retain their distinct binding meaning. Profile and target panels show the experimental endpoint, species/preparation, units, reference response and source, plus estimated Hill interpolation and transfer to the circuit. Binding scales without adequate evidence remain labeled estimates.
 
+Aripiprazole D2 occupancy now has a separate empirical human PET effect compartment, with a published EC50 of **8.63 ng/mL** and equilibration rate of **0.725 h⁻¹**. It does not change the binding Ki or functional response assay. A conditional comparison against another study's four regional group means reduces mean absolute error from **20.81 to 4.12 percentage points**. This check supplies observed plasma concentrations and assumes effect-site equilibrium; it does not validate the app's PK, dynamic delay, mixtures or downstream brain effects. See [the PET comparison](docs/research-validation-pet.md).
+
 Diazepam's circuit effect uses measured inhibitory-current decay durations from rat hippocampal cultures in place of the previous generic GABA current bias and amplitude gain. A single-exponential conversion, interpolation, transfer to this circuit and concentrations outside the measured range are explicitly labeled. See [the synaptic evidence audit](docs/research-neural.md) and [the functional evidence audit](docs/research-pharmacology.md).
+
+Independent preparation checks retain a substantial diazepam discrepancy: the curve predicts **112.2%** decay prolongation at 1 µM, versus **72.5 ± 12.9% SEM** in an acute rat cortical experiment and a **49.1%** ratio derived from mouse amygdala group means. Chronic tolerance is unsupported. The [neural comparison](docs/research-validation-neural.md) explains why these different endpoints do not justify silently fitting one global correction.
 
 Six human PET reference maps now replace 120 of 300 hand-selected regional sensitivity weights. The **Regional evidence** inspector identifies each measured source value, tracer, mapped anatomical parcel, normalization and fallback. These spatial proxies constrain regional variation; their conversion to firing effects remains estimated. The [regional evidence audit](docs/research-regional.md) documents the mapping and reproducible import. Extracted atlas data retain **CC BY-NC-SA 4.0**, including its noncommercial restriction; [data attribution and license](docs/REGIONAL-DATA-LICENSE.md) are separate from independently written source code.
 
 Selected metabolic interactions now use measured parent CYP2D6 inhibition constants and substrate-specific clearance fractions derived from human inhibitor studies under explicit assumptions. The interface separates these **assay-informed estimates** from **observed study results** and **unquantified interactions**. It does not apply one study's AUC multiplier to an arbitrary mixture. See [the interaction evidence audit](docs/research-interactions.md). Active metabolites remain omitted, which is especially consequential for bupropion and fluoxetine. Other neural gains, regional couplings, cognitive mappings, brain partition settings and combination-response rules remain estimates.
+
+A [retrospective bupropion interaction benchmark](docs/research-validation-interactions.md) exposes the parent-only model's limitation: a static desipramine AUC ratio of **1.017**, compared with **5.2 observed**. Adding study-context metabolite concentrations gives **1.731**; an animal-derived hepatic scaling sensitivity gives **3.946–5.086**. Those reference calculations are separate from the live simulation and do not add dynamic metabolite formation or validate arbitrary combinations.
 
 The firing traces and workspace journal show what these equations and selection rules produce. They do not predict a person's perception, mood, clinical response or risks from a combination. Activity entropy is a spatial summary, not a consciousness score. The language interface is separate and does not expose all hidden reasoning or demonstrate neuronal emergence of language. Missing modeled interactions indicate incomplete coverage. Passing software tests verifies implementation properties, not biological calibration.
 
@@ -118,7 +126,9 @@ Experiment exports retain numerical states, RNG states, delay history, custom pr
 
 ## Tests
 
-Run `npm test` for the complete suite. Browser checks cover desktop/mobile layout, regional and interaction evidence inspectors, exposure changes, memory and journal controls. Earlier checks also covered actual SmolLM2 WebGPU loading, answer generation, response provenance and unloading. Tests cover:
+Run `npm test` for the software suite and `npm run validate:science` for the reproducible scientific comparison report. The in-app **Validation** panel presents the observations and remaining mismatches. [docs/VALIDATION.md](docs/VALIDATION.md) distinguishes software checks, calibration, conditional external-data comparisons and retrospective reconstruction. A successful command means the report and implementation checks ran correctly; it does not mean all experimental comparisons match or that NeuroScope has clinical predictive validity.
+
+Browser checks cover desktop/mobile layout, regional and interaction evidence inspectors, exposure changes, memory and journal controls. Earlier checks also covered actual SmolLM2 WebGPU loading, answer generation, response provenance and unloading. Tests cover:
 
 - PK mass balance, nonnegative concentrations, exchange equilibrium, terminal half-life behavior, competition, modulation and selected metabolic interactions.
 - Neural spike/reset dynamics, excitatory/inhibitory signs, matched controls, integration convergence and seeded reproducibility.
@@ -168,4 +178,5 @@ docs/SCIENCE.md          Serotonin microdomain and molecular structure notes
 docs/BRAIN-MODEL.md      Regional and symbolic model equations, scope and replay
 docs/BRAIN-ANATOMY.md    Cortical geometry provenance, coordinates and licenses
 docs/DIALOGUE.md         Optional language model and deterministic inspector behavior
+docs/VALIDATION.md       Experimental comparisons, calibration boundaries and known discrepancies
 ```

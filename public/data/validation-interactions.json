@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "id": "bupropion-cyp2d6-static-reconstruction-2025",
+  "title": "Bupropion interaction model: clinical discrepancy and metabolite sensitivity",
+  "retrieved": "2026-10-13",
+  "classification": "retrospective literature reconstruction; not prospective or participant-matched validation",
+  "scope": "A static CYP2D6 comparison at published steady-state inhibitor concentrations. Study-case calculations do not create metabolites in the interactive bloodstream simulation.",
+  "equation": "AUCR = 1 / (1 - fm + fm / (1 + sum(freeInhibitorNM / kiNM)))",
+  "concentrationSource": "Tanaudommongkon et al. (2025), Table 1; steady-state Cmax values attributed there to Kharasch et al. (2020). Unbound concentrations combine those total plasma measurements with separately measured in-vitro plasma binding.",
+  "concentrationContext": "Adults receiving chronic oral bupropion XL 300 mg/day in the concentration-source study. These are not measured inhibitor concentrations in each interaction-study participant, simultaneous within-person mixture maxima, or a single virtual injection.",
+  "parentCompoundId": "bupropion",
+  "enzyme": "CYP2D6",
+  "components": [
+    { "id": "bupropion", "label": "Racemic bupropion", "isParent": true, "kiNM": 12650, "totalPlasmaCmaxNM": 340, "plasmaUnboundFractionRounded": 0.70, "freePlasmaNM": 238 },
+    { "id": "erythrohydrobupropion", "label": "Racemic erythrohydrobupropion", "isParent": false, "kiNM": 970, "totalPlasmaCmaxNM": 420, "plasmaUnboundFractionRounded": 0.77, "freePlasmaNM": 323 },
+    { "id": "threohydrobupropion", "label": "Racemic threohydrobupropion", "isParent": false, "kiNM": 5300, "totalPlasmaCmaxNM": 2050, "plasmaUnboundFractionRounded": 0.71, "freePlasmaNM": 1456 },
+    { "id": "hydroxybupropion", "label": "Racemic hydroxybupropion", "isParent": false, "kiNM": 11080, "totalPlasmaCmaxNM": 4840, "plasmaUnboundFractionRounded": 0.59, "freePlasmaNM": 2860 }
+  ],
+  "componentEvidence": {
+    "potency": "Competitive inhibition of dextromethorphan O-demethylation in pooled human liver microsomes. Apparent Ki; authors found microsomal unbound fractions close to one.",
+    "units": "Table 1 micromolar values multiplied by 1000 to store nM. Published unbound concentrations are stored directly to avoid compounding rounded total concentration and rounded free-fraction errors.",
+    "bindingConflict": "This experiment's approximately 70% unbound parent fraction differs from the catalog's 16% unbound label-based value. Neither is silently replaced; the benchmark supplies study-context unbound concentrations directly."
+  },
+  "liverScale": {
+    "range": [5.5, 9.4],
+    "classification": "estimated cross-species sensitivity analysis",
+    "provenance": "Tanaudommongkon et al. (2025) adopts a ratio based on rat quantitative whole-body autoradiography after carbon-14-labeled hydroxybupropion, attributed to Reese et al. (2008).",
+    "limitations": "Neither bound is a measured human unbound liver concentration or a confidence interval. Applying one scale to all parent/metabolite pools and from single animal exposure to chronic human exposure is an assumption. The mean of endpoint predictions is a descriptive midpoint, not a fitted optimum."
+  },
+  "cases": [
+    {
+      "id": "bupropion-desipramine",
+      "substrateId": "desipramine",
+      "label": "Desipramine",
+      "fractionMetabolized": 0.90,
+      "fractionProvenance": "Literature value used in the 2025 paper, attributed to Reese et al. (2008); not derived here from the observed 5.2 ratio.",
+      "observedAUCR": 5.2,
+      "observedEndpoint": "Parent desipramine plasma AUC with versus without bupropion",
+      "sampleSize": 15,
+      "population": "Healthy CYP2D6 normal metabolizers",
+      "regimen": "Open-label two-period study: desipramine 50 mg on day 1 and day 22; bupropion 150 mg/day on days 8–10, 300 mg/day on days 11–21, and 150 mg with the day-22 probe.",
+      "reportedPlasmaAllAUCR": 1.73,
+      "reportedLiverMeanAUCR": 4.52,
+      "sourceIds": ["tanaudommongkon-2025", "reese-2008"]
+    },
+    {
+      "id": "bupropion-nebivolol",
+      "substrateId": "nebivolol",
+      "label": "Nebivolol",
+      "fractionMetabolized": 0.93,
+      "fractionProvenance": "Estimated from a separate pharmacogenetic study (Briciu et al., 2014), as reported in the 2025 analysis; not estimated from this bupropion interaction endpoint.",
+      "observedAUCR": 7.2,
+      "observedEndpoint": "Parent nebivolol plasma AUC with versus without bupropion",
+      "sampleSize": 18,
+      "population": "Healthy volunteers",
+      "regimen": "Open-label two-period study: nebivolol 5 mg on day 1 and day 8; bupropion pretreatment 150 mg/day for 3 days then 300 mg/day for 4 days, with 300 mg on the probe day.",
+      "reportedPlasmaAllAUCR": 1.77,
+      "reportedLiverMeanAUCR": 5.13,
+      "sourceIds": ["tanaudommongkon-2025", "gheldiu-2016"]
+    },
+    {
+      "id": "bupropion-atomoxetine",
+      "substrateId": "atomoxetine",
+      "label": "Atomoxetine",
+      "fractionMetabolized": 0.91,
+      "fractionProvenance": "Estimated from pharmacogenetic data (Brown et al., 2016), as reported in the 2025 analysis; not estimated from this bupropion interaction endpoint.",
+      "observedAUCR": 5.1,
+      "observedEndpoint": "Parent atomoxetine plasma AUC with versus without bupropion",
+      "sampleSize": 18,
+      "population": "Healthy CYP2D6 normal metabolizers",
+      "regimen": "Open-label two-period study: atomoxetine 25 mg alone and after 7 days of bupropion pretreatment (150 mg/day for 3 days then 300 mg/day for 4 days), with 300 mg bupropion on the probe day.",
+      "reportedPlasmaAllAUCR": 1.75,
+      "reportedLiverMeanAUCR": 4.70,
+      "sourceIds": ["tanaudommongkon-2025", "todor-2016"]
+    },
+    {
+      "id": "bupropion-dextromethorphan",
+      "substrateId": "dextromethorphan",
+      "label": "Dextromethorphan",
+      "fractionMetabolized": 0.96,
+      "fractionProvenance": "Literature value attributed to Nakashima et al. (2007) in the 2025 analysis; not estimated from this bupropion interaction endpoint.",
+      "observedAUCR": 6.5,
+      "observedEndpoint": "Dextromethorphan plasma AUC with versus without bupropion",
+      "sampleSize": 24,
+      "population": "Healthy volunteers; clinical result attributed to Duong et al. (2020) by the 2025 paper",
+      "regimen": "Open-label two-period study: dextromethorphan 30 mg on days 1 and 22; bupropion 150 mg/day for 3 days then 150 mg twice daily for 16 days, with 150 mg on the probe day.",
+      "reportedPlasmaAllAUCR": 1.82,
+      "reportedLiverMeanAUCR": 5.95,
+      "sourceIds": ["tanaudommongkon-2025"],
+      "retrievalLimit": "Clinical endpoint and protocol were verified in the 2025 paper's Table 2; the Duong clinical report was not independently retrieved."
+    },
+    {
+      "id": "bupropion-vortioxetine",
+      "substrateId": "vortioxetine",
+      "label": "Vortioxetine",
+      "fractionMetabolized": 0.65,
+      "fractionProvenance": "Estimated from pharmacogenetic data (Frederiksen et al., 2022), as reported in the 2025 analysis; not estimated from this bupropion interaction endpoint.",
+      "observedAUCR": 2.28,
+      "observedEndpoint": "Steady-state vortioxetine plasma AUC with versus without bupropion",
+      "sampleSize": 24,
+      "population": "Healthy volunteers",
+      "regimen": "Vortioxetine 10 mg/day on days 1–28; compare day 14 with day 28 after bupropion 75 mg twice daily for 3 days then 150 mg twice daily on days 18–28.",
+      "reportedPlasmaAllAUCR": 1.44,
+      "reportedLiverMeanAUCR": 2.28,
+      "sourceIds": ["tanaudommongkon-2025", "chen-2013"]
+    }
+  ],
+  "limitations": [
+    "This is a retrospective reconstruction of an existing literature analysis, not a new blinded holdout or proof of clinical predictive validity.",
+    "Shared Cmax inputs come from another cohort and formulation; they do not recreate participant-level inhibitor exposure in each interaction trial.",
+    "Fraction metabolized values are literature estimates, not individual measurements; genotype, hepatic distribution and bioavailability may vary.",
+    "Static peak concentrations omit absorption, metabolite formation and elimination, delayed onset and washout, and enzyme adaptation.",
+    "The liver range is a sensitivity interval from animal-derived assumptions, not statistical uncertainty or a prediction interval.",
+    "No clinical effect, safety, neuronal firing, or cognitive endpoint is tested by a plasma AUC comparison.",
+    "These reference substrate cases do not add those drugs to the live catalog or apply their AUC ratios to another compound."
+  ],
+  "sources": [
+    { "id": "tanaudommongkon-2025", "title": "Tanaudommongkon et al. (2025), CYP2D6 inhibition by bupropion and metabolites, Tables 1–2 and equations 1–2", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13095643/", "doi": "10.1016/j.dmd.2025.100070" },
+    { "id": "kharasch-2020", "title": "Kharasch et al. (2020), stereoselective steady-state bupropion disposition", "url": "https://doi.org/10.1002/cpt.1888", "doi": "10.1002/cpt.1888" },
+    { "id": "reese-2008", "title": "Reese et al. (2008), desipramine–bupropion interaction mechanisms", "url": "https://pubmed.ncbi.nlm.nih.gov/18420781/", "doi": "10.1124/dmd.107.020198" },
+    { "id": "gheldiu-2016", "title": "Gheldiu et al. (2016), nebivolol–bupropion clinical interaction", "url": "https://pubmed.ncbi.nlm.nih.gov/27300331/", "doi": "10.1159/000447266" },
+    { "id": "todor-2016", "title": "Todor et al. (2016), atomoxetine–bupropion clinical interaction", "url": "https://pubmed.ncbi.nlm.nih.gov/27518170/", "doi": "10.18433/J3H03R" },
+    { "id": "chen-2013", "title": "Chen et al. (2013), vortioxetine pharmacokinetic interactions", "url": "https://pubmed.ncbi.nlm.nih.gov/23975654/", "doi": "10.1007/s40261-013-0117-6" }
+  ]
+}

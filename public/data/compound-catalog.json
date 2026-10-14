@@ -169,6 +169,31 @@
           "evidenceType": "assay",
           "modelAssumption": false,
           "subtype": "DRD2",
+          "occupancyCalibration": {
+            "id": "aripiprazole-striatal-pet-kim-2012",
+            "kind": "pet-effect-compartment",
+            "compoundId": "aripiprazole",
+            "target": "D2",
+            "endpoint": "Striatal D2/3 radioligand displacement occupancy",
+            "ec50NgML": 8.63,
+            "ec50Uncertainty": { "kind": "parameter-95-percent-confidence-interval", "lower": 7.75, "upper": 9.51, "unit": "ng/mL" },
+            "effectRatePerHour": 0.725,
+            "effectRateUncertainty": { "kind": "parameter-95-percent-confidence-interval", "lower": 0.542, "upper": 0.908, "unit": "1/h" },
+            "maximum": 1,
+            "maximumEvidence": "Fixed 100% maximum in the published model, not a fitted measurement",
+            "concentrationBasis": "Total-plasma-equivalent effect compartment; not free brain concentration",
+            "equations": "dCe/dt = ke0(Cp - Ce); occupancy = Ce / (EC50 + Ce); ng/mL = nM × molecularWeight / 1000",
+            "classification": "published-human-PET-model-calibration",
+            "sourceIds": ["kim-2012-aripiprazole-pet"],
+            "context": "N=18 healthy men after a single oral administration. EC50 and ke0 were estimated together using serial human PET and plasma data. The NeuroScope plasma compartment and virtual bolus are different from the published oral PK model.",
+            "limits": [
+              "PET measures D2/3 radioligand displacement, whereas the app represents a combined D2 target. This is a striatal calibration, not an extrastriatal or whole-brain occupancy measurement.",
+              "The effect compartment is an empirical delay model. It does not identify blood–brain barrier permeability, a binding on/off rate, Kp,uu or a measured brain concentration.",
+              "The simulation transfers the published effect model to its simplified virtual plasma kinetics; route, absorption, patient variability and active metabolites are not reconstructed.",
+              "Competition with other compounds, altered endogenous drive, repeated exposure and links to functional neural responses are unvalidated transfers.",
+              "Parameter confidence intervals do not describe patient prediction intervals. Occupancy does not specify receptor activation or clinical response."
+            ]
+          },
           "functionalAssay": {
             "kind": "activation",
             "midpointNM": 38,
@@ -344,6 +369,11 @@
           "id": "aripiprazole-ht1a-functional",
           "title": "Jordan et al. (2002), aripiprazole at human 5-HT1A receptors, Table 1",
           "url": "https://pubmed.ncbi.nlm.nih.gov/12063084/"
+        },
+        {
+          "id": "kim-2012-aripiprazole-pet",
+          "title": "Kim et al. (2012), striatal aripiprazole PET effect-compartment calibration, Table 1",
+          "url": "https://doi.org/10.1038/jcbfm.2011.180"
         }
       ],
       "unavailable3D": false,

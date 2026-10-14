@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { modelContent, profileContent, targetContent, neuralEvidenceContent, regionalEvidenceContent, interactionEvidenceContent, interactionReferenceContent, sourcesContent, escapeHTML } from '../src/content.js';
+import { modelContent, helpContent, profileContent, targetContent, neuralEvidenceContent, regionalEvidenceContent, interactionEvidenceContent, interactionReferenceContent, sourcesContent, escapeHTML } from '../src/content.js';
 import { DIAZEPAM_NEURAL_CALIBRATION } from '../src/neural-evidence.js';
 import { modulationFromTargets } from '../src/neural.js';
 import { regionalSensitivity, REGIONAL_ATLAS } from '../src/regional-evidence.js';
 import { interactionProfileEvidence } from '../src/interaction-evidence.js';
+import { ARIPIPRAZOLE_PET_CALIBRATION, PET_VALIDATION_EVIDENCE } from '../src/pet-occupancy.js';
 
 const assay = {
   kind:'activation', midpointNM:5.4, midpointType:'EC50', maxResponse:0.28,
@@ -80,6 +81,49 @@ test('neural evidence separates a measured endpoint from interpolated and capped
   assert.match(render(30),/Estimated concentration interpolation/);
   assert.match(render(2000),/Outside measured range · value capped/);
   assert.match(render(10),/transfer to this circuit is estimated/);
+  assert.match(render(10),/recordings show smaller diazepam decay changes/);
+  assert.match(render(10),/Chronic tolerance is not modeled/);
+  assert.match(render(10),/Validation/);
+});
+
+test('direct synaptic reference exposes independent mismatches without refitting them', () => {
+  const calibrated = structuredClone(profile);
+  calibrated.targets[0].neuralCalibrationId = DIAZEPAM_NEURAL_CALIBRATION.id;
+  for (const html of [modelContent(), profileContent(calibrated)]) {
+    for (const label of ['Independent transfer discrepancies', '112% decay increase', '72.5 ± 12.9% SEM', '49.1% increase derived from group means', 'different preparations and decay endpoints', 'Chronic tolerance is not modeled', 'https://doi.org/10.3389/fncel.2025.1624813', 'https://doi.org/10.3389/fncir.2012.00032']) assert.ok(html.includes(label), label);
+  }
+});
+
+test('PET profile preserves effect-model parameter provenance separately from functional response', () => {
+  const calibrated = structuredClone(profile);
+  calibrated.targets[0].occupancyCalibration = structuredClone(ARIPIPRAZOLE_PET_CALIBRATION);
+  calibrated.sources.push(...PET_VALIDATION_EVIDENCE.sources);
+  const html = profileContent(calibrated);
+  for (const label of ['Human PET occupancy model', '8.63 ng/mL', '0.725 h⁻¹', '7.75–9.51 ng/mL', '0.542–0.908 1/h', 'Fixed 100% maximum in the published model', 'N=18 healthy men', 'Parameter confidence intervals are not individual prediction intervals', 'does not measure neuron firing or validate cognition', 'Missing plasma histories', 'Sourced functional assay', 'https://doi.org/10.1038/jcbfm.2011.180']) assert.ok(html.includes(label), label);
+  const custom = profileContent({...calibrated,custom:true});
+  assert.ok(!custom.includes('Human PET occupancy model'));
+});
+
+test('PET target details use current effect state and escape imported provenance', () => {
+  const hostile = '<svg onload=alert(1)>';
+  const calibration = {...ARIPIPRAZOLE_PET_CALIBRATION,context:hostile,maximumEvidence:hostile};
+  const html = targetContent({id:'D2', contributors:[{id:'test-compound',action:'partial_agonist',occupancyCalibration:calibration,effectSiteNgML:12,petSingleCompoundOccupancy:0.6}]}, {compounds:[{...profile,sources:PET_VALIDATION_EVIDENCE.sources}]});
+  assert.ok(html.includes('Current effect compartment'));
+  assert.ok(html.includes('12 ng/mL'));
+  assert.ok(html.includes('Single-compound occupancy estimate'));
+  assert.ok(html.includes('60%'));
+  assert.ok(!html.includes('<svg'));
+  assert.ok(html.includes('&lt;svg onload=alert(1)&gt;'));
+});
+
+test('help and model point to the benchmark panel without extending PET validation to firing', () => {
+  for (const html of [modelContent(),helpContent()]) {
+    assert.match(html, /<strong>Validation<\/strong>/);
+    assert.match(html, /PET occupancy (?:comparisons )?do(?:es)? not validate firing or cognition/);
+  }
+  const html = sourcesContent();
+  assert.ok(html.includes('https://doi.org/10.3389/fncel.2025.1624813'));
+  assert.ok(html.includes('https://doi.org/10.1371/journal.pone.0046488'));
 });
 
 test('legacy experiment migration notice stays visible and treats imported text as untrusted', () => {
