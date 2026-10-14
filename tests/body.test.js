@@ -7,6 +7,22 @@ function close(actual, expected, message) {
   assert.ok(actual.distanceTo(expected) < 1e-9, `${message}: ${actual.toArray()} vs ${expected.toArray()}`);
 }
 
+test('body context continues the medulla into a cord and separates peripheral endocrine organs from the CNS', () => {
+  const system=createBodySystem(),{spinalCord,thyroid,adrenalGlands}=system.organs;
+  assert.equal(spinalCord.userData.type,'cns-anatomy');
+  assert.equal(spinalCord.userData.anatomyId,'spinal-cord');
+  assert.equal(spinalCord.parent,system.circulation);
+  close(spinalCord.geometry.parameters.path.getPoint(0),new THREE.Vector3(0,49,-3),'cord begins at the schematic medulla endpoint');
+  assert.ok(spinalCord.geometry.parameters.path.getPoint(1).y < -20);
+  assert.equal(thyroid.userData.type,'endocrine-organ');
+  assert.equal(adrenalGlands.length,2);
+  adrenalGlands.forEach((gland,index)=>{
+    assert.equal(gland.userData.type,'endocrine-organ');
+    assert.ok(gland.position.y>system.organs.kidneys[index].position.y,'adrenal sits superior to its kidney');
+    assert.equal(gland.position.x,system.organs.kidneys[index].position.x);
+  });
+});
+
 test('circulation and blood–brain barrier expose distinct display scales and usable organ handles', () => {
   const system = createBodySystem();
   assert.equal(system.circulation.parent, system.group);

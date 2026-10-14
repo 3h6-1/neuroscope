@@ -29,7 +29,11 @@ Region definitions use approximate MNI-like coordinates `[x lateral, y anterior,
 
 This is a proper rigid axis rotation with determinant +1. It preserves distances and handedness. It does not rescale, translate, fit or nonlinearly register region coordinates to the surface. Consequently the region centers are **approximate, unregistered annotations**, not segmented atlas parcels. A marker's radius is symbolic and does not estimate the physical size of a nucleus or a cortical area.
 
-The source asset contains cortical pial surfaces only. Cerebellar ellipsoids and the brainstem tube are explicitly labeled schematic positional context. Hippocampal, amygdalar, striatal, thalamic and brainstem markers represent modeled regional populations; their display meshes are not reconstructed anatomical boundaries.
+The source asset contains cortical pial surfaces only. Version 3.4 adds a separate, **schematic internal anatomy layer**: corpus callosum, thalami, hypothalamus, distinct anterior/posterior pituitary lobes and stalk, hippocampi, amygdalae, caudate, putamen, globus pallidus, ventricles, pineal gland, cerebellum, midbrain, pons, medulla and upper cervical spinal cord. Curves and surfaces illustrate spatial relationships; none is an MRI segmentation or a registered atlas boundary. Structure dimensions and positions are approximate. Bilateral structures are grouped for inspection.
+
+The **Internal anatomy / Regional activity** selector separates these structures from symbolic population markers. Choosing a structure highlights it and provides anatomical roles and source links. Medial and inferior camera presets, hemisphere cutaway, opacity controls and optional labels expose the hypothalamus and pituitary. The CNS-in-body option opens the torso view, which continues the brainstem into a schematic spinal cord and includes thyroid and adrenal glands as separate endocrine organs. The cord in the brain close-up represents only the upper cervical continuation.
+
+Anterior pituitary portal vessels and posterior pituitary axons have distinct illustrative routes. Animated tracers follow playback time; they do not model blood velocity, axonal transport speed, secretion rates or hormone concentrations. The hormone-pathway inspector explains seven selectable pathways and their feedback. See [neuroendocrine anatomy](NEUROENDOCRINE-ANATOMY.md) for physiology and sources. The original quantitative neural and drug models are unchanged by showing or selecting anatomy.
 
 Gray cortex remains anatomical reference, including primary sensory and motor areas that are excluded from the functional network. Only regions explicitly supplied in `REGIONS` receive active markers. No painted surface parcel or vertex-level neural field is inferred from those markers. Visible edges exactly follow the provided `CONNECTIONS` source/target IDs, weights and delays, but their curved paths are decorative model connections rather than diffusion MRI tractography.
 
@@ -37,12 +41,14 @@ Gray cortex remains anatomical reference, including primary sensory and motor ar
 
 `createBrainAnatomy({ regions, connections, surface })` in `src/brain-geometry.js` returns:
 
-- `group`: the complete static geometry hierarchy.
+- `group`: the complete geometry hierarchy.
+- `internal`: the separate schematic anatomy interface, with structure selection, labels, route visibility and illustrative playback.
+- `setActivityVisible(enabled)`: shows or hides functional markers and their model connections independently of anatomical structures.
 - `cortex`: left and right cortical reference meshes.
 - `nodeMeshes`: a Map keyed by the supplied string region ID.
 - `edges`: one mesh per supplied directed connection, in the input order.
 - `setSurfaceOpacity(value)`: sets bounded cortical opacity independently of region activity.
-- `setCutaway(enabled)`: hides the right cortical hemisphere to expose medial and deep markers; it does not remove nodes or alter model state.
+- `setCutaway(enabled)`: hides the right cortical hemisphere to expose medial and deep structures; it does not remove nodes or alter model state.
 - `setConnections(enabled)`: changes edge visibility without modifying topology.
 - `update(brainStats)`: reads `brainStats.regional` entries containing `id`, `e`, `i` and `delta`.
 - `selectRegion(id)`: highlights a supplied region and returns its mesh, or clears selection for an unknown/null ID.
@@ -55,6 +61,8 @@ If no surface is supplied, the module can return a visibly labeled procedural fa
 ## Validation
 
 `tests/brain-geometry.test.js` checks source metadata and coordinate checksums; all triangles have valid indices and nonzero area; each mesh edge has two incident faces; and each hemisphere retains Euler characteristic 2. These checks guard the integrity of the closed fsaverage topology during conversion.
+
+Additional internal-anatomy tests check finite geometry, expected spatial relationships, structure/evidence correspondence, selection, independent visibility and resource disposal. They do not establish segmented anatomical accuracy. Body tests verify the cord continuation and the distinction between CNS and peripheral endocrine organs.
 
 Rendering tests check exact axis transformation, marker correspondence, distances and handedness, supplied edge direction, independent materials, cutaway/opacity/selection composition, finite coordinates and transforms, and resource ownership. They establish the integrity of the geometry and its interface, not scientific calibration of the network's assumed regional dynamics or receptor weights.
 

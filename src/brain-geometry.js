@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createInternalAnatomy} from './internal-anatomy.js';
 
 // Surface vertices retain native fsaverage coordinates. Modeled region positions
 // are approximate MNI-like annotations, not a registration or parcel assignment.
@@ -50,7 +51,7 @@ function surfaceMesh(data, side, opacity) {
   const mesh = new THREE.Mesh(geometry, material(0xffffff,{ vertexColors:true, transparent:true, opacity, depthWrite:false, side:THREE.DoubleSide }));
   mesh.renderOrder = 1;
   return tag(mesh, `${side === 'left' ? 'Left' : 'Right'} cerebral cortex · fsaverage5`,
-    'MRI-derived FreeSurfer average pial surface distributed by Nilearn. Gray anatomy is contextual: primary sensory and motor regions are not functional nodes in this model. Region markers are approximate overlays, not registered atlas parcels.', 'brain-surface', { hemisphere:side, source:'fsaverage5', units:'mm' });
+    'MRI-derived FreeSurfer average pial surface distributed by Nilearn. Gray anatomy is contextual: primary sensory and motor regions are not functional nodes in this model. Region markers are approximate overlays, not registered atlas parcels.', 'brain-surface', { anatomyId:'cerebrum', hemisphere:side, source:'fsaverage5', units:'mm' });
 }
 
 function schematicSurface(side, opacity) {
@@ -63,23 +64,7 @@ function schematicSurface(side, opacity) {
   }
   geometry.computeVertexNormals();
   return tag(new THREE.Mesh(geometry,material(0x8c9aa5,{transparent:true,opacity,depthWrite:false,side:THREE.DoubleSide})),
-    `${side} cortex · schematic fallback`, 'Procedural placeholder used because a valid MRI-derived surface was not supplied. It is not reconstructed anatomy.', 'brain-surface', {hemisphere:side,source:'procedural fallback'});
-}
-
-function schematicContext() {
-  const group=tag(new THREE.Group(),'Schematic cerebellum and brainstem','These structures provide positional context and are not part of the fsaverage cortical mesh. Their shape and dimensions are illustrative.','brain-context');
-  for(const side of [-1,1]) {
-    const cerebellum=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),material(0x778999,{transparent:true,opacity:0.17,depthWrite:false}));
-    cerebellum.position.copy(position([side*23,-56,-42]));
-    cerebellum.scale.set(27,17,23);
-    tag(cerebellum,'Cerebellum · schematic context','An ellipsoid indicates approximate cerebellar location; no MRI-derived cerebellar surface is claimed.','brain-context');
-    group.add(cerebellum);
-  }
-  const curve=new THREE.CatmullRomCurve3([[0,-27,-17],[0,-31,-33],[0,-37,-57]].map(position));
-  const stem=new THREE.Mesh(new THREE.TubeGeometry(curve,24,5.7,10,false),material(0x8c9c9f,{transparent:true,opacity:0.19,depthWrite:false}));
-  tag(stem,'Brainstem · schematic context','A simplified positional guide for brainstem nuclei, not a segmented anatomical reconstruction.','brain-context');
-  group.add(stem);
-  return group;
+    `${side} cortex · schematic fallback`, 'Procedural placeholder used because a valid MRI-derived surface was not supplied. It is not reconstructed anatomy.', 'brain-surface', {anatomyId:'cerebrum',hemisphere:side,source:'procedural fallback'});
 }
 
 /**
@@ -92,10 +77,11 @@ export function createBrainAnatomy({regions=[],connections=[],surface}={}) {
     'Selected non-sensory region populations inside anatomical context. This is a reduced network model, not an entire-brain simulation or a model of consciousness.','brain-network');
   const cortex=tag(new THREE.Group(),'Cortical surface reference','Gray cortical anatomy is reference context. No primary sensory or motor parcels are simulated.','cortex');
   const nodeMeshes=new Map(),edges=[];
-  let opacity=0.28,cutaway=false,disposed=false,selected=null;
+  let opacity=0.28,cutaway=false,disposed=false,selected=null,activityVisible=true,connectionsVisible=true;
   const surfaceGroups = surface?.hemispheres;
   for(const side of ['left','right']) cortex.add(surfaceGroups?.[side]?surfaceMesh(surfaceGroups[side],side,opacity):schematicSurface(side,opacity));
-  group.add(cortex,schematicContext());
+  const internal=createInternalAnatomy();
+  group.add(cortex,internal.group);
   group.userData.surfaceSource=surfaceGroups?'Nilearn fsaverage5 pial surfaces':'procedural fallback';
   group.userData.coordinateTransform='[x,y,z] -> [x,z,-y], no nonlinear registration';
   const sphere=new THREE.SphereGeometry(1,22,16);
@@ -155,7 +141,12 @@ export function createBrainAnatomy({regions=[],connections=[],surface}={}) {
     group.userData.cutaway=cutaway;
     group.userData.cutawayDescription=cutaway?'Right cortical hemisphere hidden to expose medial/deep model nodes; no anatomy has been surgically resectioned.':'Both cortical hemispheres visible.';
   }
-  function setConnections(value) { connectionGroup.visible=Boolean(value);group.userData.connectionsVisible=connectionGroup.visible; }
+  function setConnections(value) { connectionsVisible=Boolean(value);connectionGroup.visible=activityVisible&&connectionsVisible;group.userData.connectionsVisible=connectionsVisible; }
+  function setActivityVisible(value) {
+    activityVisible=Boolean(value);group.userData.activityVisible=activityVisible;
+    nodeMeshes.forEach(node=>{node.visible=activityVisible;});
+    connectionGroup.visible=activityVisible&&connectionsVisible;
+  }
   function refreshNode(node) {
     const base=new THREE.Color(node.userData.baseColor);
     const delta=node.userData.delta;
@@ -193,6 +184,9 @@ export function createBrainAnatomy({regions=[],connections=[],surface}={}) {
   }
   function dispose() {
     if(disposed)return;
+    // The internal layer owns its materials and label textures. Removing it
+    // before traversal ensures parent disposal never disposes them twice.
+    internal.dispose();
     const geometries=new Set(),materials=new Set();
     group.traverse(object=>{if(object.geometry)geometries.add(object.geometry);if(object.material)for(const item of Array.isArray(object.material)?object.material:[object.material])materials.add(item);});
     geometries.forEach(geometry=>geometry.dispose());materials.forEach(item=>item.dispose());
@@ -200,6 +194,6 @@ export function createBrainAnatomy({regions=[],connections=[],surface}={}) {
     if(!geometries.has(sphere))sphere.dispose();if(!geometries.has(ring))ring.dispose();
     group.removeFromParent();disposed=true;group.userData.disposed=true;
   }
-  setSurfaceOpacity(opacity);setCutaway(false);setConnections(true);
-  return {group,cortex,nodeMeshes,edges,setSurfaceOpacity,setCutaway,setConnections,update,selectRegion,dispose};
+  setSurfaceOpacity(opacity);setCutaway(false);setConnections(true);setActivityVisible(true);
+  return {group,cortex,internal,nodeMeshes,edges,setSurfaceOpacity,setCutaway,setConnections,setActivityVisible,update,selectRegion,dispose};
 }

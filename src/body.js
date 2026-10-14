@@ -191,6 +191,12 @@ export function createBodySystem() {
     }
   }
   const brain = createBrain(); circulation.add(brain);
+  const spinalCord=labeled(curveTube([[0,49,-3],[0,35,-10],[0,7,-13],[0,-29,-10]],1.8,mat(0xd1c398),48,10),
+    'Spinal cord · central nervous system','The spinal cord continues from the medulla inside the vertebral canal and ends above the lower spinal nerve roots. This torso-scale course is schematic; peripheral nerves, vertebrae and segmental reflex physiology are not reconstructed.','cns-anatomy');
+  spinalCord.userData.anatomyId='spinal-cord';circulation.add(spinalCord);
+  const thyroid=labeled(new THREE.Group(),'Thyroid gland · endocrine organ','The thyroid produces T4 and T3 under pituitary TSH control. This gland is outside the CNS; hormone production and concentrations are not numerically simulated.','endocrine-organ');
+  for(const side of [-1,1])thyroid.add(ball([side*3.7,44,7],[2.9,4.8,2.2],mat(0xd6a28c)));
+  thyroid.add(ball([0,43,7],[2,1.2,1.3],mat(0xd6a28c)));circulation.add(thyroid);
   const heart = labeled(new THREE.Group(), 'Heart', 'The heart drives circulation through pulmonary and systemic vascular circuits. The displayed circulation loop is schematic; it is not a haemodynamic simulation.');
   heart.position.set(-9, 9, 6); heart.rotation.z = -0.25;
   const heartMat = mat(0xc5787d, { roughness: 0.68 });
@@ -204,6 +210,11 @@ export function createBodySystem() {
     kidney.rotation.z = side * -0.25; kidneys.push(kidney); circulation.add(kidney);
   }
   const lungs = [];
+  const adrenalGlands=[];
+  for(const side of [-1,1]) {
+    const gland=labeled(ball([side*20,-22,-2],[4.5,2.4,3],mat(0xd5bd7c)), 'Adrenal gland · endocrine organ', 'Adrenal glands lie above the kidneys. Their cortex releases cortisol under ACTH control; their medulla releases catecholamines under sympathetic control. These distinct pathways are anatomical context, not a simulated hormone level.', 'endocrine-organ');
+    adrenalGlands.push(gland);circulation.add(gland);
+  }
   for (const side of [-1, 1]) {
     const lung = labeled(ball([side * 19, 10, -5], [11, 21, 8], mat(0x769ba2, { transparent: true, opacity: 0.16, depthWrite: false })), 'Lung', 'Lungs and pulmonary circulation are shown for torso context. Gas exchange is not modeled.');
     lungs.push(lung); circulation.add(lung);
@@ -235,7 +246,7 @@ export function createBodySystem() {
   group.add(circulation, barrier);
   return {
     group, circulation, barrier, bloodPath, barrierBloodPath: barrierParts.bloodPath,
-    brainPosition: new THREE.Vector3(0, 72, 0), organs: { brain, heart, liver, kidneys, lungs }, vessels,
+    brainPosition: new THREE.Vector3(0, 72, 0), organs: { brain, spinalCord, thyroid, adrenalGlands, heart, liver, kidneys, lungs }, vessels,
     endothelialCells: barrierParts.endothelialCells, tightJunctions: barrierParts.tightJunctions,
     astrocytes: barrierParts.astrocytes, pericytes: barrierParts.pericytes, bloodCells: barrierParts.bloodCells,
   };

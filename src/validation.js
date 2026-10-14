@@ -87,9 +87,10 @@ function interactionGroup(compounds) {
 /** Use the released catalog, not mutable user/imported profiles. */
 export function runValidation(catalog) {
   const compounds = Array.isArray(catalog) ? catalog : catalog.compounds;
-  return { modelVersion: '3.3.0', scope: 'Bundled release benchmarks compare selected outputs with published human PET, animal-cell electrophysiology and clinical interaction results. Only the aripiprazole occupancy model is improved here; remaining discrepancies and unmodeled outcomes are retained. This report does not evaluate the current virtual mixture or imported profiles.',
+  return { modelVersion: '3.4.0', scope: 'Bundled release benchmarks compare selected outputs with published human PET, animal-cell electrophysiology and clinical interaction results. The aripiprazole occupancy correction introduced in 3.3 is retained; remaining discrepancies and unmodeled outcomes remain visible. This report does not evaluate the current virtual mixture or imported profiles, internal anatomical shapes, or qualitative hormone pathways.',
     groups: [petGroup(compounds), ...neuralGroups(), interactionGroup(compounds)],
     coverage: [
+      { layer: 'Internal anatomy and hormone pathways', status: 'Qualitative reference', detail: 'Internal meshes are schematic and unregistered. Hormone routes describe physiology; tracer motion is illustrative. No endocrine concentration, feedback kinetics or drug-induced hormonal change is calculated.' },
       { layer: 'Systemic and brain concentrations', status: 'Not independently validated', detail: 'Virtual bolus kinetics, brain partition and exchange are simplified; measured plasma or bath inputs bypass those layers in these benchmarks. Oral absorption, dynamic metabolites and individual variability are missing.' },
       { layer: 'Regional activity and firing', status: 'Not validated', detail: 'PET receptor-density weights are spatial observations, not measurements of drug-induced regional firing or connectivity. No human EEG/fMRI or spike-train agreement is established.' },
       { layer: 'Target function and drug mixtures', status: 'Estimated transfer', detail: 'Binding Ki, PET occupancy and assay functional response are different endpoints. Mixture competition, network gains and the transfer of striatal D2/3 occupancy to other regions remain unvalidated.' },

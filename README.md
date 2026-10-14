@@ -1,6 +1,6 @@
 # NeuroScope — Brain & Cognition Lab
 
-**NeuroScope 3.3.0** is an interactive 3D browser program for exploring brain-active molecules, circulation, blood–brain exchange, target interactions, regional activity and a symbolic cognitive workspace. It does **not** implement a complete human brain or predict human consciousness or intelligence. Written in JavaScript with Three.js, it combines sourced molecular structures and cortical surface anatomy with explicitly bounded computational models. Numerical engines run independently of rendering.
+**NeuroScope 3.4.0** is an interactive 3D browser program for exploring brain-active molecules, circulation, blood–brain exchange, target interactions, regional activity and a symbolic cognitive workspace. It does **not** implement a complete human brain or predict human consciousness or intelligence. Written in JavaScript with Three.js, it combines sourced molecular structures and cortical surface anatomy with explicitly bounded computational models. Numerical engines run independently of rendering.
 
 [Open NeuroScope](https://3h6-1.github.io/neuroscope/) · [GitHub source](https://github.com/3h6-1/neuroscope)
 
@@ -44,6 +44,15 @@ Serve `dist/` through an HTTP server. Opening `index.html` with `file://` will n
 - **Structure:** inspect atoms, bonds, hydrogens and stereochemistry. The library also includes serotonin and the experimental SERT structure 5I71 with its bound ligand. Experimental protein geometry remains static.
 - **Targets and interactions:** compare transporter inhibition, antagonism, partial agonism, positive allosteric modulation and channel blockade. Occupancy and activation are separate quantities. Evidence notes distinguish assay values from model assumptions.
 - **Validation:** inspect published observations alongside calculated values, errors, experimental conditions and unresolved discrepancies. Calibration inputs, conditional external comparisons and retrospective interaction reconstructions are labeled separately.
+
+
+### Internal anatomy and hormone pathways
+
+The Brain view now opens on **Internal anatomy**. Choose a structure, use the medial/inferior camera views, or adjust the hemisphere cutaway and cortical opacity. The separate **Regional activity** layer preserves the existing functional population model.
+
+Inspect the hypothalamus, anterior and posterior pituitary, stalk, deep nuclei, hippocampi, corpus callosum, ventricular system, cerebellum, brainstem and cervical cord. **CNS in body** opens a torso view with the spinal cord, thyroid and adrenal glands. The MRI-derived cortex remains distinct from the schematic, unregistered internal shapes.
+
+**Hormone pathways** explains adrenal, thyroid, gonadal, growth-hormone, prolactin and posterior-pituitary routes. Portal blood delivery to the anterior pituitary is distinguished from hypothalamic axons ending in the posterior pituitary. Animated route markers illustrate direction only; hormone secretion, concentrations, endocrine feedback kinetics and drug-induced hormonal changes are not calculated. These additions do not imply validated endocrine or sensory simulations. See [anatomy and endocrine scope](docs/NEUROENDOCRINE-ANATOMY.md).
 
 ### Find a molecule
 
